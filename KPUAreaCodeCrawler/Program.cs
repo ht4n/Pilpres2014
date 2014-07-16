@@ -70,6 +70,7 @@ namespace Pilpres2014
         static readonly String selectUrl = "http://pilpres2014.kpu.go.id/da1.php?cmd=select&grandparent=0&parent={0}";
         static readonly String outputFile = "AreaCodeTable.csv";
         static readonly int sleepInMs = 1000;
+        static WebClient client = new WebClient();            
 
         String GetLevelName(int level)
         {
@@ -96,7 +97,6 @@ namespace Pilpres2014
             Regex rgx = new Regex("<select.*name=\"wilayah_id\".*(<option\\s+value=\".*\">.*</option>)+", RegexOptions.Multiline);
             StringBuilder sb = new StringBuilder();
 
-            WebClient client = new WebClient();
             sb.Append(client.DownloadString(url));
 
             Match match = rgx.Match(sb.ToString());
