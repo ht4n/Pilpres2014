@@ -3,7 +3,9 @@ Pilpres2014
 
 Code to help clean and honest democracy process in Indonesia 2014
 
-A code to get the area code and name from KPU site by automatic crawling KPU site
+A code to get the area code and name from KPU site by automatic crawling KPU site.
+
+WARNING: do not spam KPU.go.id website by running this code. You really need to get the table that I have published (unless there is some changes) in https://github.com/ht4n/Pilpres2014/blob/master/AreaCodeTable.csv.
      
 KPU.go.id provides web service in http://pilpres2014.kpu.go.id/da1.php
 The crawler will look and parse the area code/name from the HTML tag <select name="wilayah_id"><option value="AREA-CODE">AREA-NAME</option>...</select>.
