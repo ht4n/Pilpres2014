@@ -14,8 +14,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+DISCLAIMER: The author of this program is not officially affiliated with any 
+political party or KPU.go.id. This is a third party code to help people
+consume the KPU feeds for data analysis. Any damage indirectly or directly
+is not the author responsibility.
 */
+
 using System;
+using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -321,7 +327,7 @@ namespace Pilpres2014
             using (StreamWriter sw = new StreamWriter(outputFile))
             {
                 sw.AutoFlush = true;
-                sw.WriteLine("#HEADER:Level,LevelCategory,AreaCode,AreaName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
+                sw.WriteLine("#HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,KecamatanCode,KecamatanName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
                 // Assumptions:
                 // The table is sorted by columns from left-to-right
                 using (StreamReader sr = new StreamReader(districtTableFile))
@@ -448,12 +454,12 @@ namespace Pilpres2014
         {
             if (args.Length != 3)
             {
-                Console.WriteLine("Syntax: VoteCounter.exe <AreaCodeTable.csv> <Output.csv> <ThreadCount>");
+                Console.WriteLine("Syntax: VoteCounter.exe <AreaCodeTable.csv> <OutputDir> <ThreadCount>");
                 return;
             }
 
             String tableFile = args[0];
-            String outputFile = args[1];
+            String outputDir = args[1];
             int threadCount = int.Parse(args[2]);
             if (File.Exists(tableFile) == false)
             {
@@ -461,7 +467,21 @@ namespace Pilpres2014
                 return;
             }
 
+            if (!Directory.Exists(outputDir))
+            {
+                Console.WriteLine("> Output directory {0} does not exist", outputDir);
+                Console.WriteLine("> Creating new directory {0}", outputDir);
+                Directory.CreateDirectory(outputDir);
+            }
+
+            String outputFile = Path.Combine(outputDir, string.Format("KPU-Feeds-{0:yyyy-MM-dd_hh-mm-ss-tt}.csv", DateTime.Now));
+            Console.WriteLine("> Output path: {0}", outputFile);
+
+            Stopwatch sw = new Stopwatch();
             CountVotes(tableFile, outputFile, threadCount);
+
+            Console.WriteLine("> Completed crawling in {0} minutes. Press any key to continue ...", sw.Elapsed.Minutes);
+            Console.ReadLine();
         }
     }
 }
