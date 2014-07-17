@@ -94,6 +94,10 @@ namespace Pilpres2014
         static int s_threadCount = 4;
         static ManualResetEvent[] s_events;
         static int[] s_threadIds;
+        static Nullable<Int32> s_itemCount = 0;
+
+        // This variable is for debugging. If it is not for debugging set this to UINT32_MAX
+        static int s_maxItems = 12;
 
         static bool ParseCandidateVoteCount(String filterStart, String filterEnd, String resultPage, out UInt64 voteCount)
         {
@@ -208,7 +212,8 @@ namespace Pilpres2014
             string levelCategory, 
             string areaCode, 
             string areaName, 
-            StreamWriter sw)
+            StreamWriter sw,
+            StreamWriter swjson)
         {
             String provinceName = rprovinceName;
             String provinceCode = rprovinceCode;
@@ -241,8 +246,9 @@ namespace Pilpres2014
                 SpinWait.SpinUntil(() => { return (s_outstandingWorkItems < s_threadCount); });
 
                 {
-                    ThreadPool.QueueUserWorkItem((Object threadContext) =>
+                    WaitCallback callback = (Object threadContext) =>
                     {
+                        Nullable<Int32> itemCount = threadContext as Nullable<Int32>;
                         Console.WriteLine("[ProcessingThreadStart:{0},{1},{2},{3},{4},{5}]",
                             provinceCode,
                             provinceName,
@@ -255,19 +261,19 @@ namespace Pilpres2014
                         Thread.Sleep(new Random().Next(5000));
 
                         BinaryTally tally = CountVotes(
-                            provinceCode, 
-                            provinceName, 
-                            kabupatenCode, 
-                            kabupatenName, 
+                            provinceCode,
+                            provinceName,
+                            kabupatenCode,
+                            kabupatenName,
                             kecamatanCode,
                             kecamatanName);
 
                         if (tally == null)
                         {
-                            Console.WriteLine("Tally cannot be obtained for {0} {1} {2} {3}", 
-                                provinceCode, 
-                                kabupatenCode, 
-                                kecamatanCode, 
+                            Console.WriteLine("Tally cannot be obtained for {0} {1} {2} {3}",
+                                provinceCode,
+                                kabupatenCode,
+                                kecamatanCode,
                                 kecamatanName);
                         }
                         else
@@ -297,9 +303,36 @@ namespace Pilpres2014
                                 tally.Counter2,
                                 tally.Total);
 
+                        StringBuilder jsonsb = new StringBuilder();
+                        if (itemCount.Value != 0) jsonsb.Append(",\n");
+                        jsonsb.Append("{\n");
+                        jsonsb.AppendFormat("  ProvinceCode:{0},\n", provinceCode);
+                        jsonsb.AppendFormat("  ProvinceName:{0},\n", provinceName);
+                        jsonsb.AppendFormat("  KabupatenCode:{0},\n", kabupatenCode);
+                        jsonsb.AppendFormat("  KabupatenName:{0},\n", kabupatenName);
+                        jsonsb.AppendFormat("  KecamatanCode:{0},\n", kecamatanCode);
+                        jsonsb.AppendFormat("  KecamatanName:{0},\n", kecamatanName);
+                        jsonsb.AppendFormat("  PrabowoHattaVotes:{0}\n,", tally.Counter1);
+                        jsonsb.AppendFormat("  JokowiKallaVotes:{0},\n", tally.Counter2);
+                        jsonsb.AppendFormat("  TotalVotes:{0},\n", tally.Total);
+                        jsonsb.Append("}");
+
+                        swjson.WriteLine(jsonsb.ToString());
+
                         // Sets completion signal for event tid
                         Interlocked.Decrement(ref s_outstandingWorkItems);
-                    });
+                    };
+
+                    if (s_itemCount++ == 0)
+                    {
+                        // For the first item (for JSON formatting purpose)
+                        // do not use thread pool so that it can print without ','
+                        callback(s_itemCount);
+                    }
+                    else
+                    {
+                        ThreadPool.QueueUserWorkItem(callback, s_itemCount);
+                    }
                 }
             }
         }
@@ -324,74 +357,101 @@ namespace Pilpres2014
             String kabupatenCode = "";
             String kabupatenName = "";
 
+            String outputFileJson = Path.GetFileNameWithoutExtension(outputFile) + ".json";
+
+            Stopwatch timer = new Stopwatch();
             using (StreamWriter sw = new StreamWriter(outputFile))
             {
                 sw.AutoFlush = true;
                 sw.WriteLine("#HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,KecamatanCode,KecamatanName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
-                // Assumptions:
-                // The table is sorted by columns from left-to-right
-                using (StreamReader sr = new StreamReader(districtTableFile))
+
+                using (StreamWriter swjson = new StreamWriter(outputFileJson))
                 {
-                    string line = sr.ReadLine();
-                    while (!sr.EndOfStream && !string.IsNullOrWhiteSpace(line))
+                    swjson.WriteLine("[");
+
+                    // Assumptions:
+                    // The table is sorted by columns from left-to-right
+                    using (StreamReader sr = new StreamReader(districtTableFile))
                     {
-                        if (line.StartsWith("#"))
+                        string line = sr.ReadLine();
+                        while (!sr.EndOfStream && !string.IsNullOrWhiteSpace(line) && s_itemCount < s_maxItems)
                         {
+                            if (line.StartsWith("#"))
+                            {
+                                line = sr.ReadLine();
+                                continue;
+                            }
+
+                            String[] tokens = line.Split(',');
+                            if (tokens.Length != 4)
+                            {
+                                Console.WriteLine("> !!Invalid input with more than 4 columns!: {0}", line);
+                                continue;
+                            }
+
+                            CountVotesHelper(
+                                tokens[0],
+                                ref provinceCode,
+                                ref provinceName,
+                                ref kabupatenCode,
+                                ref kabupatenName,
+                                tokens[1],
+                                tokens[2],
+                                tokens[3],
+                                sw,
+                                swjson);
+
                             line = sr.ReadLine();
-                            continue;
                         }
-
-                        String[] tokens = line.Split(',');
-                        if (tokens.Length != 4)
-                        {
-                            Console.WriteLine("> !!Invalid input with more than 4 columns!: {0}", line);
-                            continue;
-                        }
-
-                        CountVotesHelper(
-                            tokens[0], 
-                            ref provinceCode,
-                            ref provinceName,
-                            ref kabupatenCode,
-                            ref kabupatenName, 
-                            tokens[1], 
-                            tokens[2], 
-                            tokens[3], 
-                            sw);
-                       
-                        line = sr.ReadLine();
                     }
-                }
+
+                    swjson.WriteLine("]");
+
+                    Console.WriteLine("> Crawler has finished iterating all provinces/kabupatens/kecamatans in {0} minutes", timer.Elapsed.Minutes);
+                    Console.WriteLine("> Waiting until all outstanding worker threads completed their jobs ... (timeout in 30 secs)");
+                    SpinWait.SpinUntil(() => { return s_outstandingWorkItems == -1; }, 10000);
+                }                
             }
 
+            GenerateSummary(outputFile);
+        }
+
+        static void GenerateSummary(String outputFile)
+        {
             Dictionary<String, BinaryTally> provinceTallyMap = new Dictionary<string, BinaryTally>();
             Dictionary<String, BinaryTally> kabupatenTallyMap = new Dictionary<string, BinaryTally>();
             String logPayload = null;
+            String stringFormat = ",\n{{\n    \"PrabowoHattaVotes\":{0},\n    \"PrabowoHattaPercentage\":{1:N2},\n    \"JokowiKallaVotes\":{2},\n    \"JokowiKallaPercentage\":{3:N2},\n    \"Total\":{4}\n}}";
+            bool[] firstItems = new bool[3];
+            for (int i = 0; i < 3; ++i)
+            {
+                firstItems[i] = true;
+            }
 
-            using (StreamWriter swtotal = new StreamWriter(outputFile + "-total.csv"))
+            String totalOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-total.json");
+            String totalProvinceOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-province.json");
+            String totalKabupatenOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-kabupaten.json");
+            using (StreamWriter swtotal = new StreamWriter(totalOutputFile))
             {
                 BinaryTally totalTally = new BinaryTally();
-                swtotal.WriteLine("#HEADER:PrabowoHattaVotes,PrabowoHattaVotesPercentage,JokowiKallaVotes,JokowiKallaVotesPercentage,TotalVotes");
-                Console.WriteLine("#TOTAL:PrabowoHattaVotes,PrabowoHattaVotesPercentage,JokowiKallaVotes,JokowiKallaVotesPercentage,TotalVotes");
+                swtotal.WriteLine("[");
 
                 ThreeLevelDictionary.Enumerator totalTallyEnumerator = s_tallyTable.VotingTable.GetEnumerator();
                 while (totalTallyEnumerator.MoveNext())
                 {
-                    using (StreamWriter swProvince = new StreamWriter(outputFile + "-province.csv"))
+                    using (StreamWriter swProvince = new StreamWriter(totalProvinceOutputFile))
                     {
                         TwoLevelDictionary.Enumerator provinceTallyEnumerator = totalTallyEnumerator.Current.Value.GetEnumerator();
-                        swProvince.WriteLine("#HEADER:PrabowoHattaVotes,PrabowoHattaVotesPercentage,JokowiKallaVotes,JokowiKallaVotesPercentage,TotalVotes");
-                        Console.WriteLine("#PROVINCE:PrabowoHattaVotes,PrabowoHattaVotesPercentage,JokowiKallaVotes,JokowiKallaVotesPercentage,TotalVotes");
+                        swProvince.WriteLine("[");
                         BinaryTally provinceTally = new BinaryTally();
 
                         while (provinceTallyEnumerator.MoveNext())
                         {
-                            using (StreamWriter swKabupaten = new StreamWriter(outputFile + "-kabupaten.csv"))
+                            using (StreamWriter swKabupaten = new StreamWriter(totalKabupatenOutputFile))
                             {
-                                swKabupaten.WriteLine("#HEADER:PrabowoHattaVotes,PrabowoHattaVotesPercentage,JokowiKallaVotes,JokowiKallaVotesPercentage,TotalVotes");
-                                swKabupaten.WriteLine("#KABUPATEN:PrabowoHattaVotes,PrabowoHattaVotesPercentage,JokowiKallaVotes,JokowiKallaVotesPercentage,TotalVotes");
+                                swKabupaten.WriteLine("[");
                                 Dictionary<String, BinaryTally>.Enumerator kabupatenTallyEnumerator = provinceTallyEnumerator.Current.Value.GetEnumerator();
-                                
+
                                 while (kabupatenTallyEnumerator.MoveNext())
                                 {
                                     BinaryTally kabupatenTally = new BinaryTally();
@@ -399,10 +459,10 @@ namespace Pilpres2014
                                     kabupatenTally.Counter1 += kabupatenTallyEnumerator.Current.Value.Counter1;
                                     kabupatenTally.Counter2 += kabupatenTallyEnumerator.Current.Value.Counter2;
                                     kabupatenTally.Total += kabupatenTallyEnumerator.Current.Value.Total;
-                                    
+
                                     kabupatenTallyMap.Add(kabupatenTallyEnumerator.Current.Key, kabupatenTally);
 
-                                    logPayload = String.Format("{0},{1:N2},{2},{3:N2},{4}",
+                                    logPayload = String.Format(firstItems[2] ? (",\n" + stringFormat) : stringFormat,
                                         kabupatenTally.Counter1,
                                         kabupatenTally.Total == 0 ? 0 : (float)kabupatenTally.Counter1 / kabupatenTally.Total,
                                         kabupatenTally.Counter2,
@@ -415,7 +475,11 @@ namespace Pilpres2014
                                     provinceTally.Counter1 += kabupatenTally.Counter1;
                                     provinceTally.Counter2 += kabupatenTally.Counter2;
                                     provinceTally.Total += kabupatenTally.Total;
+
+                                    firstItems[2] = false;
                                 }
+
+                                swKabupaten.WriteLine("]");
                             }
 
                             provinceTallyMap.Add(provinceTallyEnumerator.Current.Key, provinceTally);
@@ -426,19 +490,22 @@ namespace Pilpres2014
                             totalTally.Total += provinceTally.Total;
                         }
 
-                        logPayload = String.Format("{0},{1:N2},{2},{3:N2},{4}",
-                                                    provinceTally.Counter1,
-                                                    provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter1 / provinceTally.Total,
-                                                    provinceTally.Counter2,
-                                                    provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter2 / provinceTally.Total,
-                                                    provinceTally.Total);
+                        logPayload = String.Format(firstItems[1] ? (",\n" + stringFormat) : stringFormat,
+                                                   provinceTally.Counter1,
+                                                   provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter1 / provinceTally.Total,
+                                                   provinceTally.Counter2,
+                                                   provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter2 / provinceTally.Total,
+                                                   provinceTally.Total);
 
                         Console.WriteLine(logPayload);
                         swProvince.WriteLine(logPayload);
+                        swProvince.WriteLine("}");
                     }
+
+                    firstItems[0] = false;
                 }
 
-                logPayload = String.Format("{0},{1:N2},{2},{3:N2},{4}",
+                logPayload = String.Format(firstItems[0] ? (",\n" + stringFormat) : stringFormat,
                         totalTally.Counter1,
                         totalTally.Total == 0 ? 0 : (float)totalTally.Counter1 / totalTally.Total,
                         totalTally.Counter2,
@@ -446,7 +513,8 @@ namespace Pilpres2014
                         totalTally.Total);
 
                 Console.WriteLine(logPayload);
-                swtotal.WriteLine(logPayload);                
+                swtotal.WriteLine(logPayload);
+                swtotal.WriteLine("]");
             }
         }
 
@@ -474,7 +542,7 @@ namespace Pilpres2014
                 Directory.CreateDirectory(outputDir);
             }
 
-            String outputFile = Path.Combine(outputDir, string.Format("KPU-Feeds-{0:yyyy-MM-dd_hh-mm-ss-tt}.csv", DateTime.Now));
+            String outputFile = Path.Combine(outputDir, string.Format("KPU-Feeds-{0:yyyy-MM-dd-hh-tt}.csv", DateTime.Now));
             Console.WriteLine("> Output path: {0}", outputFile);
 
             Stopwatch sw = new Stopwatch();
