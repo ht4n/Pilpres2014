@@ -94,10 +94,10 @@ namespace Pilpres2014
         static int s_threadCount = 4;
         static ManualResetEvent[] s_events;
         static int[] s_threadIds;
-        static Nullable<Int32> s_itemCount = 0;
+        static int s_itemCount = 0;
 
         // This variable is for debugging. If it is not for debugging set this to UINT32_MAX
-        static UInt32 s_maxItems = UInt32.MaxValue;
+        static UInt32 s_maxItems = 100;
 
         static bool ParseCandidateVoteCount(String filterStart, String filterEnd, String resultPage, out UInt64 voteCount)
         {
@@ -212,8 +212,7 @@ namespace Pilpres2014
             string levelCategory, 
             string areaCode, 
             string areaName, 
-            StreamWriter sw,
-            StreamWriter swjson)
+            StreamWriter sw)
         {
             String provinceName = rprovinceName;
             String provinceCode = rprovinceCode;
@@ -248,7 +247,6 @@ namespace Pilpres2014
                 {
                     WaitCallback callback = (Object threadContext) =>
                     {
-                        Nullable<Int32> itemCount = threadContext as Nullable<Int32>;
                         Console.WriteLine("[ProcessingThreadStart:{0},{1},{2},{3},{4},{5}]",
                             provinceCode,
                             provinceName,
@@ -303,36 +301,11 @@ namespace Pilpres2014
                                 tally.Counter2,
                                 tally.Total);
 
-                        StringBuilder jsonsb = new StringBuilder();
-                        if (itemCount.Value != 0) jsonsb.Append(",\n");
-                        jsonsb.Append("{\n");
-                        jsonsb.AppendFormat("  ProvinceCode:{0},\n", provinceCode);
-                        jsonsb.AppendFormat("  ProvinceName:{0},\n", provinceName);
-                        jsonsb.AppendFormat("  KabupatenCode:{0},\n", kabupatenCode);
-                        jsonsb.AppendFormat("  KabupatenName:{0},\n", kabupatenName);
-                        jsonsb.AppendFormat("  KecamatanCode:{0},\n", kecamatanCode);
-                        jsonsb.AppendFormat("  KecamatanName:{0},\n", kecamatanName);
-                        jsonsb.AppendFormat("  PrabowoHattaVotes:{0}\n,", tally.Counter1);
-                        jsonsb.AppendFormat("  JokowiKallaVotes:{0},\n", tally.Counter2);
-                        jsonsb.AppendFormat("  TotalVotes:{0},\n", tally.Total);
-                        jsonsb.Append("}");
-
-                        swjson.WriteLine(jsonsb.ToString());
-
                         // Sets completion signal for event tid
                         Interlocked.Decrement(ref s_outstandingWorkItems);
                     };
 
-                    if (s_itemCount++ == 0)
-                    {
-                        // For the first item (for JSON formatting purpose)
-                        // do not use thread pool so that it can print without ','
-                        callback(s_itemCount);
-                    }
-                    else
-                    {
-                        ThreadPool.QueueUserWorkItem(callback, s_itemCount);
-                    }
+                    ThreadPool.QueueUserWorkItem(callback);
                 }
             }
         }
@@ -357,60 +330,50 @@ namespace Pilpres2014
             String kabupatenCode = "";
             String kabupatenName = "";
 
-            String outputFileJson = Path.GetFileNameWithoutExtension(outputFile) + ".json";
-
             Stopwatch timer = new Stopwatch();
             using (StreamWriter sw = new StreamWriter(outputFile))
             {
                 sw.AutoFlush = true;
                 sw.WriteLine("#HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,KecamatanCode,KecamatanName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
 
-                using (StreamWriter swjson = new StreamWriter(outputFileJson))
+                // Assumptions:
+                // The table is sorted by columns from left-to-right
+                using (StreamReader sr = new StreamReader(districtTableFile))
                 {
-                    swjson.WriteLine("[");
-
-                    // Assumptions:
-                    // The table is sorted by columns from left-to-right
-                    using (StreamReader sr = new StreamReader(districtTableFile))
+                    string line = sr.ReadLine();
+                    while (!sr.EndOfStream && !string.IsNullOrWhiteSpace(line) && s_itemCount++ < s_maxItems)
                     {
-                        string line = sr.ReadLine();
-                        while (!sr.EndOfStream && !string.IsNullOrWhiteSpace(line) && s_itemCount < s_maxItems)
+                        if (line.StartsWith("#"))
                         {
-                            if (line.StartsWith("#"))
-                            {
-                                line = sr.ReadLine();
-                                continue;
-                            }
-
-                            String[] tokens = line.Split(',');
-                            if (tokens.Length != 4)
-                            {
-                                Console.WriteLine("> !!Invalid input with more than 4 columns!: {0}", line);
-                                continue;
-                            }
-
-                            CountVotesHelper(
-                                tokens[0],
-                                ref provinceCode,
-                                ref provinceName,
-                                ref kabupatenCode,
-                                ref kabupatenName,
-                                tokens[1],
-                                tokens[2],
-                                tokens[3],
-                                sw,
-                                swjson);
-
                             line = sr.ReadLine();
+                            continue;
                         }
-                    }
 
-                    swjson.WriteLine("]");
+                        String[] tokens = line.Split(',');
+                        if (tokens.Length != 4)
+                        {
+                            Console.WriteLine("> !!Invalid input with more than 4 columns!: {0}", line);
+                            continue;
+                        }
+
+                        CountVotesHelper(
+                            tokens[0],
+                            ref provinceCode,
+                            ref provinceName,
+                            ref kabupatenCode,
+                            ref kabupatenName,
+                            tokens[1],
+                            tokens[2],
+                            tokens[3],
+                            sw);
+
+                        line = sr.ReadLine();
+                    }
 
                     Console.WriteLine("> Crawler has finished iterating all provinces/kabupatens/kecamatans in {0} minutes", timer.Elapsed.Minutes);
                     Console.WriteLine("> Waiting until all outstanding worker threads completed their jobs ... (timeout in 30 secs)");
                     SpinWait.SpinUntil(() => { return s_outstandingWorkItems == -1; }, 10000);
-                }                
+                }
             }
 
             GenerateSummary(outputFile);
@@ -418,12 +381,12 @@ namespace Pilpres2014
 
         static void GenerateSummary(String outputFile)
         {
-            Dictionary<String, BinaryTally> provinceTallyMap = new Dictionary<string, BinaryTally>();
-            Dictionary<String, BinaryTally> kabupatenTallyMap = new Dictionary<string, BinaryTally>();
             String logPayload = null;
-            String stringFormat = ",\n{{\n    \"PrabowoHattaVotes\":{0},\n    \"PrabowoHattaPercentage\":{1:N2},\n    \"JokowiKallaVotes\":{2},\n    \"JokowiKallaPercentage\":{3:N2},\n    \"Total\":{4}\n}}";
-            bool[] firstItems = new bool[3];
-            for (int i = 0; i < 3; ++i)
+            String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":{0},\n    \"PrabowoHattaPercentage\":{1:N2},\n    \"JokowiKallaVotes\":{2},\n    \"JokowiKallaPercentage\":{3:N2},\n    \"Total\":{4}\n}}";
+            String stringFormatProvince = "{{\n    \"Province\":{0},\n    \"PrabowoHattaVotes\":{1},\n    \"PrabowoHattaPercentage\":{2:N2},\n    \"JokowiKallaVotes\":{3},\n    \"JokowiKallaPercentage\":{4:N2},\n    \"Total\":{5}\n}}";
+            String stringFormatKabupaten = "{{\n    \"ProvinceCode\":{0},\n    \"ProvinceName\":{1},\n    \"KabupatenCode\":{2},\n    \"KabupatenName\":{3},\n    \"KecamatanCode\":{4},\n    \"KecamatanName\":{5},\n    \"PrabowoHattaVotes\":{6},\n    \"PrabowoHattaPercentage\":{7:N2},\n    \"JokowiKallaVotes\":{8},\n    \"JokowiKallaPercentage\":{9:N2},\n    \"Total\":{10}\n}}";
+            bool[] firstItems = new bool[2];
+            for (int i = 0; i < 2; ++i)
             {
                 firstItems[i] = true;
             }
@@ -433,84 +396,112 @@ namespace Pilpres2014
             String totalKabupatenOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-kabupaten.json");
             using (StreamWriter swtotal = new StreamWriter(totalOutputFile))
             {
-                BinaryTally totalTally = new BinaryTally();
+                BinaryTally nationTally = new BinaryTally();
                 swtotal.WriteLine("[");
 
-                ThreeLevelDictionary.Enumerator totalTallyEnumerator = s_tallyTable.VotingTable.GetEnumerator();
-                while (totalTallyEnumerator.MoveNext())
+                using (StreamWriter swProvince = new StreamWriter(totalProvinceOutputFile))
                 {
-                    using (StreamWriter swProvince = new StreamWriter(totalProvinceOutputFile))
-                    {
-                        TwoLevelDictionary.Enumerator provinceTallyEnumerator = totalTallyEnumerator.Current.Value.GetEnumerator();
-                        swProvince.WriteLine("[");
+                    swProvince.WriteLine("[");
+
+                    ThreeLevelDictionary.Enumerator provinceEnumeerator = s_tallyTable.VotingTable.GetEnumerator();
+                    while (provinceEnumeerator.MoveNext())
+                    {   
                         BinaryTally provinceTally = new BinaryTally();
+                        String provinceName = "";
 
-                        while (provinceTallyEnumerator.MoveNext())
+                        using (StreamWriter swKabupaten = new StreamWriter(totalKabupatenOutputFile))
                         {
-                            using (StreamWriter swKabupaten = new StreamWriter(totalKabupatenOutputFile))
+                            swKabupaten.WriteLine("[");
+
+                            TwoLevelDictionary.Enumerator kabupatenEnumerator = provinceEnumeerator.Current.Value.GetEnumerator();
+                            while (kabupatenEnumerator.MoveNext())
                             {
-                                swKabupaten.WriteLine("[");
-                                Dictionary<String, BinaryTally>.Enumerator kabupatenTallyEnumerator = provinceTallyEnumerator.Current.Value.GetEnumerator();
-
-                                while (kabupatenTallyEnumerator.MoveNext())
+                                BinaryTally kabupatenTally = new BinaryTally();
+                                Dictionary<String, BinaryTally>.Enumerator kecamatanEnumerator = kabupatenEnumerator.Current.Value.GetEnumerator();
+                                while (kecamatanEnumerator.MoveNext())
                                 {
-                                    BinaryTally kabupatenTally = new BinaryTally();
+                                    provinceName = kecamatanEnumerator.Current.Value.ProvinceName;
 
-                                    kabupatenTally.Counter1 += kabupatenTallyEnumerator.Current.Value.Counter1;
-                                    kabupatenTally.Counter2 += kabupatenTallyEnumerator.Current.Value.Counter2;
-                                    kabupatenTally.Total += kabupatenTallyEnumerator.Current.Value.Total;
+                                    logPayload = String.Format(stringFormatKabupaten,
+                                        kecamatanEnumerator.Current.Value.ProvinceCode,
+                                        kecamatanEnumerator.Current.Value.ProvinceName,
+                                        kecamatanEnumerator.Current.Value.KabupatenCode,
+                                        kecamatanEnumerator.Current.Value.KabupatenName,
+                                        kecamatanEnumerator.Current.Value.KecamatanCode,
+                                        kecamatanEnumerator.Current.Value.KecamatanName,
+                                        kecamatanEnumerator.Current.Value.Counter1,
+                                        kecamatanEnumerator.Current.Value.Total == 0 ? 0 : (float)kecamatanEnumerator.Current.Value.Counter1 / kecamatanEnumerator.Current.Value.Total,
+                                        kecamatanEnumerator.Current.Value.Counter2,
+                                        kecamatanEnumerator.Current.Value.Total == 0 ? 0 : (float)kecamatanEnumerator.Current.Value.Counter2 / kecamatanEnumerator.Current.Value.Total,
+                                        kecamatanEnumerator.Current.Value.Total);
 
-                                    kabupatenTallyMap.Add(kabupatenTallyEnumerator.Current.Key, kabupatenTally);
+                                    if (firstItems[1] == true)
+                                    {
+                                        firstItems[1] = false;
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine(",");
+                                        swKabupaten.WriteLine(",");
+                                    }
 
-                                    logPayload = String.Format(firstItems[2] ? (",\n" + stringFormat) : stringFormat,
-                                        kabupatenTally.Counter1,
-                                        kabupatenTally.Total == 0 ? 0 : (float)kabupatenTally.Counter1 / kabupatenTally.Total,
-                                        kabupatenTally.Counter2,
-                                        kabupatenTally.Total == 0 ? 0 : (float)kabupatenTally.Counter2 / kabupatenTally.Total,
-                                        kabupatenTally.Total);
-                                    Console.WriteLine(logPayload);
-                                    swKabupaten.WriteLine(logPayload);
+                                    Console.Write(logPayload);
+                                    swKabupaten.Write(logPayload);
 
                                     // Sum each kabupaten to this province
-                                    provinceTally.Counter1 += kabupatenTally.Counter1;
-                                    provinceTally.Counter2 += kabupatenTally.Counter2;
-                                    provinceTally.Total += kabupatenTally.Total;
+                                    kabupatenTally.Counter1 += kecamatanEnumerator.Current.Value.Counter1;
+                                    kabupatenTally.Counter2 += kecamatanEnumerator.Current.Value.Counter2;
+                                    kabupatenTally.Total += kecamatanEnumerator.Current.Value.Total;
 
-                                    firstItems[2] = false;
+                                    
                                 }
 
-                                swKabupaten.WriteLine("]");
+                                provinceTally.Counter1 += kabupatenTally.Counter1;
+                                provinceTally.Counter2 += kabupatenTally.Counter2;
+                                provinceTally.Total += kabupatenTally.Total;
                             }
 
-                            provinceTallyMap.Add(provinceTallyEnumerator.Current.Key, provinceTally);
-
-                            // Sum each province to total
-                            totalTally.Counter1 += provinceTally.Counter1;
-                            totalTally.Counter2 += provinceTally.Counter2;
-                            totalTally.Total += provinceTally.Total;
+                            swKabupaten.WriteLine("]");
                         }
 
-                        logPayload = String.Format(firstItems[1] ? (",\n" + stringFormat) : stringFormat,
+                        logPayload = String.Format(stringFormatProvince,
+                                                   provinceName,
                                                    provinceTally.Counter1,
                                                    provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter1 / provinceTally.Total,
                                                    provinceTally.Counter2,
                                                    provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter2 / provinceTally.Total,
                                                    provinceTally.Total);
 
-                        Console.WriteLine(logPayload);
-                        swProvince.WriteLine(logPayload);
-                        swProvince.WriteLine("}");
+                        if (firstItems[0] == true)
+                        {
+                            firstItems[0] = false;
+                        }
+                        else
+                        {
+                            Console.WriteLine(",");
+                            swProvince.WriteLine(",");
+                        }
+
+                        Console.Write(logPayload);
+                        swProvince.Write(logPayload);
+
+                        firstItems[0] = false;
+
+                        // Sum each province to total
+                        nationTally.Counter1 += provinceTally.Counter1;
+                        nationTally.Counter2 += provinceTally.Counter2;
+                        nationTally.Total += provinceTally.Total;                        
                     }
 
-                    firstItems[0] = false;
+                    swProvince.WriteLine("]");
                 }
 
-                logPayload = String.Format(firstItems[0] ? (",\n" + stringFormat) : stringFormat,
-                        totalTally.Counter1,
-                        totalTally.Total == 0 ? 0 : (float)totalTally.Counter1 / totalTally.Total,
-                        totalTally.Counter2,
-                        totalTally.Total == 0 ? 0 : (float)totalTally.Counter2 / totalTally.Total,
-                        totalTally.Total);
+                logPayload = String.Format(stringFormatNation,
+                        nationTally.Counter1,
+                        nationTally.Total == 0 ? 0 : (float)nationTally.Counter1 / nationTally.Total,
+                        nationTally.Counter2,
+                        nationTally.Total == 0 ? 0 : (float)nationTally.Counter2 / nationTally.Total,
+                        nationTally.Total);
 
                 Console.WriteLine(logPayload);
                 swtotal.WriteLine(logPayload);
