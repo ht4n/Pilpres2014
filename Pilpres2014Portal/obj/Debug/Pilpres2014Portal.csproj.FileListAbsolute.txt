@@ -1,0 +1,6 @@
+c:\git\pilpres2014\Pilpres2014Portal\bin\Pilpres2014Portal.dll.config
+c:\git\pilpres2014\Pilpres2014Portal\bin\Pilpres2014Portal.dll
+c:\git\pilpres2014\Pilpres2014Portal\bin\Pilpres2014Portal.pdb
+c:\git\pilpres2014\Pilpres2014Portal\obj\Debug\Pilpres2014Portal.csprojResolveAssemblyReference.cache
+c:\git\pilpres2014\Pilpres2014Portal\obj\Debug\Pilpres2014Portal.dll
+c:\git\pilpres2014\Pilpres2014Portal\obj\Debug\Pilpres2014Portal.pdb
