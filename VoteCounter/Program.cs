@@ -382,9 +382,9 @@ namespace Pilpres2014
         static void GenerateSummary(String outputFile)
         {
             String logPayload = null;
-            String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":{0},\n    \"PrabowoHattaPercentage\":{1:N4},\n    \"JokowiKallaVotes\":{2},\n    \"JokowiKallaPercentage\":{3:N4},\n    \"Total\":{4}\n}}";
-            String stringFormatProvince = "{{\n    \"Province\":{0},\n    \"PrabowoHattaVotes\":{1},\n    \"PrabowoHattaPercentage\":{2:N4},\n    \"JokowiKallaVotes\":{3},\n    \"JokowiKallaPercentage\":{4:N4},\n    \"Total\":{5}\n}}";
-            String stringFormatKabupaten = "{{\n    \"ProvinceCode\":{0},\n    \"ProvinceName\":{1},\n    \"KabupatenCode\":{2},\n    \"KabupatenName\":{3},\n    \"KecamatanCode\":{4},\n    \"KecamatanName\":{5},\n    \"PrabowoHattaVotes\":{6},\n    \"PrabowoHattaPercentage\":{7:N4},\n    \"JokowiKallaVotes\":{8},\n    \"JokowiKallaPercentage\":{9:N4},\n    \"Total\":{10}\n}}";
+            String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":\"{0}\",\n    \"PrabowoHattaPercentage\":\"{1:N4}\",\n    \"JokowiKallaVotes\":\"{2}\",\n    \"JokowiKallaPercentage\":\"{3:N4}\",\n    \"Total\":\"{4}\"\n}}";
+            String stringFormatProvince = "{{\n    \"Province\":\"{0}\",\n    \"PrabowoHattaVotes\":\"{1}\",\n    \"PrabowoHattaPercentage\":\"{2:N4}\",\n    \"JokowiKallaVotes\":\"{3}\",\n    \"JokowiKallaPercentage\":\"{4:N4}\",\n    \"Total\":\"{5}\"\n}}";
+            String stringFormatKabupaten = "{{\n    \"ProvinceCode\":\"{0}\",\n    \"ProvinceName\":\"{1}\",\n    \"KabupatenCode\":\"{2}\",\n    \"KabupatenName\":\"{3}\",\n    \"KecamatanCode\":\"{4}\",\n    \"KecamatanName\":\"{5}\",\n    \"PrabowoHattaVotes\":\"{6}\",\n    \"PrabowoHattaPercentage\":\"{7:N4}\",\n    \"JokowiKallaVotes\":\"{8}\",\n    \"JokowiKallaPercentage\":\"{9:N4}\",\n    \"Total\":\"{10}\"\n}}";
             bool[] firstItems = new bool[2];
             for (int i = 0; i < 2; ++i)
             {
@@ -498,9 +498,9 @@ namespace Pilpres2014
 
                 logPayload = String.Format(stringFormatNation,
                         nationTally.Counter1,
-                        nationTally.Total == 0 ? 0 : (float)nationTally.Counter1 / nationTally.Total,
+                        nationTally.Total == 0 ? 0 : (float)(nationTally.Counter1 / nationTally.Total) * 100,
                         nationTally.Counter2,
-                        nationTally.Total == 0 ? 0 : (float)nationTally.Counter2 / nationTally.Total,
+                        nationTally.Total == 0 ? 0 : (float)(nationTally.Counter2 / nationTally.Total) * 100,
                         nationTally.Total);
 
                 Console.WriteLine(logPayload);
