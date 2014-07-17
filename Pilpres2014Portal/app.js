@@ -48,7 +48,7 @@ var Pilpres2014 = (function () {
             });
         };
 
-        this.query("KPU-Feeds-2014-07-17-03-AM-total.json", null, totalCallback);
+        this.query("KPU-Feeds-2014-07-17-04-AM-total.json", null, totalCallback);
 
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
@@ -70,7 +70,7 @@ var Pilpres2014 = (function () {
             });
         };
 
-        this.query("KPU-Feeds-2014-07-17-03-AM-province.json", null, provinceCallback);
+        this.query("KPU-Feeds-2014-07-17-04-AM-province.json", null, provinceCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {

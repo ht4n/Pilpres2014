@@ -65,7 +65,7 @@ class Pilpres2014 {
             });
         }
 
-        this.query("KPU-Feeds-2014-07-17-03-AM-total.json", null, totalCallback);
+        this.query("KPU-Feeds-2014-07-17-04-AM-total.json", null, totalCallback);
 
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
@@ -87,7 +87,7 @@ class Pilpres2014 {
             });
         }
 
-        this.query("KPU-Feeds-2014-07-17-03-AM-province.json", null, provinceCallback);
+        this.query("KPU-Feeds-2014-07-17-04-AM-province.json", null, provinceCallback);
     }
 
     query(url, context?, callback?, statusCallback?) {
