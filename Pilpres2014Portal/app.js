@@ -60,7 +60,7 @@ var Pilpres2014 = (function () {
 
             var dataJson = JSON.parse(data);
             self.voteEntries.removeAll();
-            data.forEach(function (entry) {
+            dataJson.forEach(function (entry) {
                 var voteEntry = new VoteEntry();
                 voteEntry.counter1(entry.PrabowoHattaVotes);
                 voteEntry.counter1Percentage(entry.PrabowoHattaPercentage);
