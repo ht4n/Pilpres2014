@@ -32,8 +32,8 @@ var Pilpres2014 = (function () {
                 return;
             }
 
-            self.voteEntries.removeAll();
-            data.forEach(function (entry) {
+            var dataJson = JSON.parse(data);
+            dataJson.forEach(function (entry) {
                 var voteEntry = new VoteEntry();
                 voteEntry.counter1 = entry.PrabowoHattaVotes;
                 voteEntry.counter1Percentage = entry.PrabowoHattaPercentage;
@@ -48,7 +48,9 @@ var Pilpres2014 = (function () {
             });
         };
 
-        this.query("KPU-Feeds-2014-07-17-04-AM-total.json", null, totalCallback);
+        var date = "2014-07-17";
+        var time = "-08-AM";
+        this.query("KPU-Feeds-" + date + time + "-total.json", null, totalCallback);
 
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
@@ -56,28 +58,29 @@ var Pilpres2014 = (function () {
                 return;
             }
 
+            var dataJson = JSON.parse(data);
             self.voteEntries.removeAll();
-            var response = data.response;
-            response.forEach(function (entry) {
+            data.forEach(function (entry) {
                 var voteEntry = new VoteEntry();
-                voteEntry.counter1 = entry.PrabowoHattaVotes;
-                voteEntry.counter1Percentage = entry.PrabowoHattaPercentage;
-                voteEntry.counter2 = entry.PrabowoHattaVotes;
-                voteEntry.counter2Percentage = entry.JokowiKallaPercentage;
-                voteEntry.label = entry.Province;
+                voteEntry.counter1(entry.PrabowoHattaVotes);
+                voteEntry.counter1Percentage(entry.PrabowoHattaPercentage);
+                voteEntry.counter2(entry.PrabowoHattaVotes);
+                voteEntry.counter2Percentage(entry.JokowiKallaPercentage);
+                voteEntry.total(entry.Total);
+                voteEntry.label(entry.Province);
 
                 self.voteEntries.push(voteEntry);
             });
         };
 
-        this.query("KPU-Feeds-2014-07-17-04-AM-province.json", null, provinceCallback);
+        this.query("KPU-Feeds-" + date + time + "-province.json", null, provinceCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {
         $.ajax({
             type: 'GET',
             url: url,
-            dataType: 'json',
+            dataType: 'text',
             contentType: 'application/json',
             context: context,
             statusCode: statusCallback

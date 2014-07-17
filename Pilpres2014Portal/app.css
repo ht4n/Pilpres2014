@@ -1,6 +1,6 @@
 ﻿body {
     font-family: 'tahoma', 'Segoe UI', sans-serif;
-    width: 98%;
+    width: 100%;
 }
 
 span {
@@ -8,7 +8,7 @@ span {
 }
 
 table {
-    width: 100%
+    width: 90%
 }
 
 table tbody {
@@ -22,5 +22,15 @@ table tbody {
 }
 
 .score {
-    font-size: 24px;
+    font-size: 50px;
+}
+
+.candidate1 {
+    background: red;
+    color: white;
+}
+
+.candidate2 {
+    background: black;
+    color: white;
 }

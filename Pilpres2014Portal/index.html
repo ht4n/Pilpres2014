@@ -20,8 +20,8 @@
     <table>
         <thead>
             <tr>
-                <th>Prabowo Subianto - Hatta Rajasa</th>
-                <th>Joko Widodo-Jusuf Kalla</th>                
+                <th class="candidate1">Prabowo Subianto - Hatta Rajasa</th>
+                <th class="candidate2">Joko Widodo-Jusuf Kalla</th>                
             </tr>
         </thead>
         <tbody>
@@ -51,7 +51,7 @@
         |
         <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-province.json">province</a>
         |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-kabupaten.json">kabupaten</a>
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-kabupaten.json">kabupaten</a>        
     </div>
     <div>
         <span>2014-07-17 4:00 AM PST|</span>
@@ -63,6 +63,16 @@
         |
         <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-04-AM-kabupaten.json">kabupaten</a>
     </div>
+    <div>
+        <span>2014-07-17 8:00 AM PST|</span>
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM.csv">complete</a>
+        |
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM-total.json">national</a>
+        |
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM-province.json">province</a>
+        |
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM-kabupaten.json">kabupaten</a>
+    </div>
     <p>
         Contact: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a>
     </p>
@@ -72,5 +82,30 @@
     <p>
         The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.
     </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Province</th>
+                <th>PrabowoHatta(#)</th>
+                <th>PrabowoHatta(%)</th>
+                <th>JokowiKalla(#)</th>
+                <th>JokowiKalla(%)</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ko foreach:voteEntries -->
+            <tr>
+                <td><span data-bind="text:label"></span></td>
+                <td><span data-bind="text:counter1"></span></td>
+                <td><span data-bind="text:counter1Percentage"></span></td>
+                <td><span data-bind="text:counter2"></span></td>
+                <td><span data-bind="text:counter2Percentage"></span></td>
+                <td><span data-bind="text:total"></span></td>
+            </tr>
+            <!-- /ko -->
+        </tbody>
+    </table>    
 </body>
 </html>
