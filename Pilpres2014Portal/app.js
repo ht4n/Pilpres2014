@@ -34,11 +34,17 @@ var Pilpres2014 = (function () {
 
         // Sets the current one
         var historicalFeedsLength = this.historicalFeeds().length;
-        this.datetime = this.historicalFeeds()[historicalFeedsLength - 1];
-        ;
+        this.datetime = this.historicalFeeds()[historicalFeedsLength - 1].datetime;
 
         this.toggleProvinceText = ko.observable("Show Details");
+
+        this.refresh(this.datetime);
     }
+    Pilpres2014.prototype.updateVoteByDate = function (data, event) {
+        var vm = ko.contextFor(event.currentTarget);
+        vm.$root.refresh(data.datetime);
+    };
+
     Pilpres2014.prototype.toggleProvinceDetails = function () {
         if (this.showProvinceDetails()) {
             this.showProvinceDetails(false);
@@ -59,9 +65,9 @@ var Pilpres2014 = (function () {
                 dataJson.forEach(function (entry) {
                     var voteEntry = new VoteEntry();
                     voteEntry.counter1(entry.PrabowoHattaVotes);
-                    voteEntry.counter1Percentage(entry.PrabowoHattaPercentage);
+                    voteEntry.counter1Percentage(entry.PrabowoHattaPercentage.toFixed(2));
                     voteEntry.counter2(entry.PrabowoHattaVotes);
-                    voteEntry.counter2Percentage(entry.JokowiKallaPercentage);
+                    voteEntry.counter2Percentage(entry.JokowiKallaPercentage.toFixed(2));
                     voteEntry.total(entry.Total);
                     voteEntry.label(entry.Province);
 
@@ -73,7 +79,7 @@ var Pilpres2014 = (function () {
         }
     };
 
-    Pilpres2014.prototype.refresh = function () {
+    Pilpres2014.prototype.refresh = function (datetime) {
         var self = this;
 
         var totalCallback = function (data, status) {
@@ -84,21 +90,15 @@ var Pilpres2014 = (function () {
 
             var dataJson = JSON.parse(data);
             dataJson.forEach(function (entry) {
-                var voteEntry = new VoteEntry();
-                voteEntry.counter1 = entry.PrabowoHattaVotes;
-                voteEntry.counter1Percentage = entry.PrabowoHattaPercentage;
-                voteEntry.counter2 = entry.JokowiKallaVotes;
-                voteEntry.counter2Percentage = entry.JokowiKallaPercentage;
-
                 self.totalVotes(entry.Total);
                 self.totalVotes1(entry.PrabowoHattaVotes);
                 self.totalVotes2(entry.JokowiKallaVotes);
-                self.percentageVotes1(entry.PrabowoHattaPercentage + "%");
-                self.percentageVotes2(entry.JokowiKallaPercentage + "%");
+                self.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
+                self.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
             });
         };
 
-        this.query("KPU-Feeds-" + this.datetime + "-total.json", null, totalCallback);
+        this.query("KPU-Feeds-" + datetime + "-total.json", null, totalCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {
@@ -121,7 +121,5 @@ var Pilpres2014 = (function () {
 window.onload = function () {
     var pilpres2014ViewModel = new Pilpres2014();
     ko.applyBindings(pilpres2014ViewModel);
-
-    pilpres2014ViewModel.refresh();
 };
 //# sourceMappingURL=app.js.map

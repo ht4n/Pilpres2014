@@ -1,6 +1,6 @@
 ﻿body {
     font-family: 'tahoma', 'Segoe UI', sans-serif;
-    width: 100%;
+    width: 99%;
 }
 
 span {
@@ -8,17 +8,18 @@ span {
 }
 
 table {
-    width: 99%
+    width: 100%
 }
 
 table tbody {
-    text-align:center;
+    text-align: center;
 }
 
 .pageTitle {
-    background:#2A0438;
+    background: #2A0438;
     color: white;
     padding: 10px;
+    font-size: 24px;
 }
 
 .score {

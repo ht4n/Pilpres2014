@@ -12,7 +12,7 @@
     <script src="app.js"></script>
 </head>
 <body>
-    <h1 class="pageTitle">Pilpres 2014 - Real Count</h1>
+    <div class="pageTitle">Pilpres 2014 - Real Count</div>
     <div><span class="caption">last update: 7/17/2014 9am PST</span></div>
     <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">pilpres2014.KPU.go.id</a></span></div>
     <div><span class="caption">contact us: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a></span></div>
@@ -46,7 +46,7 @@
 
     <!-- ko foreach:historicalFeeds -->
     <div>
-        <span class="caption" data-bind="text:datetime"></span><span class="caption">&nbsp;PST</span>
+        <a href="#" data-bind="click:$root.updateVoteByDate,text:datetime"></a><span class="caption">&nbsp;PST</span>
         <a data-bind="attr:{href:url + datetime + '.csv'}">complete</a>
         |
         <a data-bind="attr:{href:url + datetime + '-total.json'}">national</a>
