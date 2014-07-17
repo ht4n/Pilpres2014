@@ -430,9 +430,9 @@ namespace Pilpres2014
                                         kecamatanEnumerator.Current.Value.KecamatanCode,
                                         kecamatanEnumerator.Current.Value.KecamatanName,
                                         kecamatanEnumerator.Current.Value.Counter1,
-                                        kecamatanEnumerator.Current.Value.Total == 0 ? 0 : (float)kecamatanEnumerator.Current.Value.Counter1 / kecamatanEnumerator.Current.Value.Total,
+                                        kecamatanEnumerator.Current.Value.Total == 0 ? 0 : (float)(kecamatanEnumerator.Current.Value.Counter1 / kecamatanEnumerator.Current.Value.Total) * 100,
                                         kecamatanEnumerator.Current.Value.Counter2,
-                                        kecamatanEnumerator.Current.Value.Total == 0 ? 0 : (float)kecamatanEnumerator.Current.Value.Counter2 / kecamatanEnumerator.Current.Value.Total,
+                                        kecamatanEnumerator.Current.Value.Total == 0 ? 0 : (float)(kecamatanEnumerator.Current.Value.Counter2 / kecamatanEnumerator.Current.Value.Total) * 100,
                                         kecamatanEnumerator.Current.Value.Total);
 
                                     if (firstItems[1] == true)
@@ -467,9 +467,9 @@ namespace Pilpres2014
                         logPayload = String.Format(stringFormatProvince,
                                                    provinceName,
                                                    provinceTally.Counter1,
-                                                   provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter1 / provinceTally.Total,
+                                                   provinceTally.Total == 0 ? 0 : (float)(provinceTally.Counter1 / provinceTally.Total) * 100,
                                                    provinceTally.Counter2,
-                                                   provinceTally.Total == 0 ? 0 : (float)provinceTally.Counter2 / provinceTally.Total,
+                                                   provinceTally.Total == 0 ? 0 : (float)(provinceTally.Counter2 / provinceTally.Total) * 100,
                                                    provinceTally.Total);
 
                         if (firstItems[0] == true)
