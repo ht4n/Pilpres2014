@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Pilpres2014 Watchdogs for Honest Democracy</title>
+    <link rel="stylesheet" href="app.css" type="text/css" />
+    <script src="Scripts/jquery-2.1.1.min.js"></script>
+    <script src="Scripts/knockout-3.1.0.js"></script>
+    <script src="app.js"></script>
+</head>
+<body>
+    <h1 class="pageTitle">Pilpres 2014 - Real Count</h1>
+    <h4>Last Update: 7/16/2014 3am PST</h4>
+    <div><span>Source:<a href="http://pilpres2014.kpu.go.id/da1.php">KPU.go.id</a></span></div>
+    <hr/>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Prabowo Subianto - Hatta Rajasa</th>
+                <th>Joko Widodo-Jusuf Kalla</th>                
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <span class="score" data-bind="text:percentageVotes1"></span>
+                </td>
+                <td>
+                    <span class="score" data-bind="text:percentageVotes2"></span>
+                </td>
+            </tr>
+            <tr>
+                <td><span data-bind="text:totalVotes1"></span></td>
+                <td><span data-bind="text:totalVotes2"></span></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <hr/>    
+    <h3>Historical Data:</h3>
+
+    <div>
+        <span>2014-07-17 3:00 AM PST|</span>
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM.csv">complete</a>
+        |
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-total.json">national</a>
+        |
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-province.json">province</a>
+        |
+        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-kabupaten.json">kabupaten</a>
+    </div>
+
+    <p>
+        Contact: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a>
+    </p>
+    <p>
+        The data is obtained by automatic crawling http://pilpres2014.kpu.go.id periodically and updated every 6-12 hours.
+    </p>
+    <p>
+        The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.
+    </p>
+</body>
+</html>
