@@ -97,7 +97,7 @@ namespace Pilpres2014
         static Nullable<Int32> s_itemCount = 0;
 
         // This variable is for debugging. If it is not for debugging set this to UINT32_MAX
-        static int s_maxItems = 12;
+        static UInt32 s_maxItems = UInt32.MaxValue;
 
         static bool ParseCandidateVoteCount(String filterStart, String filterEnd, String resultPage, out UInt64 voteCount)
         {
