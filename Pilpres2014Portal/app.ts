@@ -34,8 +34,8 @@ class Pilpres2014 {
         this.provinces = ko.observableArray([]);        
         this.totalVotes1 = ko.observable(0);
         this.totalVotes2 = ko.observable(0);
-        this.percentageVotes1 = ko.observable("0%");
-        this.percentageVotes2 = ko.observable("0%");
+        this.percentageVotes1 = ko.observable("");
+        this.percentageVotes2 = ko.observable("");
         this.totalVotes = ko.observable(0);
         this.voteEntries = ko.observableArray([]);
     }
@@ -49,8 +49,8 @@ class Pilpres2014 {
                 return;
             }
 
-            self.voteEntries.removeAll();
-            data.forEach((entry) => {
+            var dataJson = JSON.parse(data);
+            dataJson.forEach((entry) => {
                 var voteEntry = new VoteEntry();
                 voteEntry.counter1 = entry.PrabowoHattaVotes;                
                 voteEntry.counter1Percentage = entry.PrabowoHattaPercentage;
@@ -65,7 +65,9 @@ class Pilpres2014 {
             });
         }
 
-        this.query("KPU-Feeds-2014-07-17-04-AM-total.json", null, totalCallback);
+        var date = "2014-07-17";
+        var time = "-09-AM";
+        this.query("KPU-Feeds-" + date + time + "-total.json", null, totalCallback);
 
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
@@ -73,28 +75,29 @@ class Pilpres2014 {
                 return;
             }
 
+            var dataJson = JSON.parse(data);
             self.voteEntries.removeAll();
-            var response = data.response;
-            response.forEach((entry) => {
+            data.forEach((entry) => {
                 var voteEntry = new VoteEntry();
-                voteEntry.counter1 = entry.PrabowoHattaVotes;
-                voteEntry.counter1Percentage = entry.PrabowoHattaPercentage;
-                voteEntry.counter2 = entry.PrabowoHattaVotes;
-                voteEntry.counter2Percentage = entry.JokowiKallaPercentage;
-                voteEntry.label = entry.Province;
+                voteEntry.counter1(entry.PrabowoHattaVotes);
+                voteEntry.counter1Percentage(entry.PrabowoHattaPercentage);
+                voteEntry.counter2(entry.PrabowoHattaVotes);
+                voteEntry.counter2Percentage(entry.JokowiKallaPercentage);
+                voteEntry.total(entry.Total);
+                voteEntry.label(entry.Province);
 
                 self.voteEntries.push(voteEntry);
             });
         }
 
-        this.query("KPU-Feeds-2014-07-17-04-AM-province.json", null, provinceCallback);
+        this.query("KPU-Feeds-" + date + time + "-province.json", null, provinceCallback);
     }
 
     query(url, context?, callback?, statusCallback?) {
         $.ajax({
             type: 'GET',
             url: url,
-            dataType: 'json',
+            dataType: 'text',
             contentType: 'application/json',
             context: context,
             statusCode: statusCallback

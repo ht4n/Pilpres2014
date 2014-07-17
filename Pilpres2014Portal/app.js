@@ -18,8 +18,8 @@ var Pilpres2014 = (function () {
         this.provinces = ko.observableArray([]);
         this.totalVotes1 = ko.observable(0);
         this.totalVotes2 = ko.observable(0);
-        this.percentageVotes1 = ko.observable("0%");
-        this.percentageVotes2 = ko.observable("0%");
+        this.percentageVotes1 = ko.observable("");
+        this.percentageVotes2 = ko.observable("");
         this.totalVotes = ko.observable(0);
         this.voteEntries = ko.observableArray([]);
     }
@@ -49,7 +49,7 @@ var Pilpres2014 = (function () {
         };
 
         var date = "2014-07-17";
-        var time = "-08-AM";
+        var time = "-09-AM";
         this.query("KPU-Feeds-" + date + time + "-total.json", null, totalCallback);
 
         var provinceCallback = function (data, status) {
