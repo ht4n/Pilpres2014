@@ -13,15 +13,16 @@
 </head>
 <body>
     <h1 class="pageTitle">Pilpres 2014 - Real Count</h1>
-    <h4>Last Update: 7/17/2014 9am PST</h4>
-    <div><span>Source:<a href="http://pilpres2014.kpu.go.id/da1.php">KPU.go.id</a></span></div>
+    <div><span class="caption">last update: 7/17/2014 9am PST</span></div>
+    <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">pilpres2014.KPU.go.id</a></span></div>
+    <div><span class="caption">contact us: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a></span></div>
     <hr/>
 
     <table>
         <thead>
             <tr>
                 <th style="width:50%" class="candidate1">Prabowo Subianto - Hatta Rajasa</th>
-                <th class="candidate2">Joko Widodo-Jusuf Kalla</th>                
+                <th class="candidate2">Joko Widodo-Jusuf Kalla</th>
             </tr>
         </thead>
         <tbody>
@@ -43,79 +44,47 @@
     <hr/>    
     <h3>Historical Data:</h3>
 
+    <!-- ko foreach:historicalFeeds -->
     <div>
-        <span>2014-07-17 3:00 AM PST|</span>
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM.csv">complete</a>
+        <span class="caption" data-bind="text:datetime"></span><span class="caption">&nbsp;PST</span>
+        <a data-bind="attr:{href:url + datetime + '.csv'}">complete</a>
         |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-total.json">national</a>
+        <a data-bind="attr:{href:url + datetime + '-total.json'}">national</a>
         |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-province.json">province</a>
+        <a data-bind="attr:{href:url + datetime + '-province.json'}">province</a>
         |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-03-AM-kabupaten.json">kabupaten</a>        
+        <a data-bind="attr:{href:url + datetime + '-kabupaten.json'}">kabupaten</a>
+    </div>
+    <!-- /ko -->
+    <div>
+        <span class="caption">The data is obtained by automatic crawling http://pilpres2014.kpu.go.id periodically and updated every 6-12 hours.</span>
     </div>
     <div>
-        <span>2014-07-17 4:00 AM PST|</span>
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-04-AM.csv">complete</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-04-AM-total.json">national</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-04-AM-province.json">province</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-04-AM-kabupaten.json">kabupaten</a>
+        <span class="caption">The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.</span>
     </div>
-    <div>
-        <span>2014-07-17 8:00 AM PST|</span>
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM.csv">complete</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM-total.json">national</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM-province.json">province</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-08-AM-kabupaten.json">kabupaten</a>
-    </div>
-    <div>
-        <span>2014-07-17 9:00 AM PST|</span>
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-09-AM.csv">complete</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-09-AM-total.json">national</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-09-AM-province.json">province</a>
-        |
-        <a href="https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-2014-07-17-09-AM-kabupaten.json">kabupaten</a>
-    </div>
-    <p>
-        Contact: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a>
-    </p>
-    <p>
-        The data is obtained by automatic crawling http://pilpres2014.kpu.go.id periodically and updated every 6-12 hours.
-    </p>
-    <p>
-        The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.
-    </p>
+    <hr />
 
+    <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText">Show Details</a>
+    <hr />
+    <!-- ko if:showProvinceDetails -->
     <table>
         <thead>
             <tr>
                 <th>Province</th>
-                <th>PrabowoHatta(#)</th>
-                <th>PrabowoHatta(%)</th>
-                <th>JokowiKalla(#)</th>
-                <th>JokowiKalla(%)</th>
-                <th>Total</th>
+                <th>Prabowo-Hatta(%)</th>
+                <th>Jokowi-Kalla(%)</th>
             </tr>
         </thead>
         <tbody>
             <!-- ko foreach:voteEntries -->
             <tr>
                 <td><span data-bind="text:label"></span></td>
-                <td><span data-bind="text:counter1"></span></td>
-                <td><span data-bind="text:counter1Percentage"></span></td>
-                <td><span data-bind="text:counter2"></span></td>
-                <td><span data-bind="text:counter2Percentage"></span></td>
-                <td><span data-bind="text:total"></span></td>
+                <td><span data-bind="text:counter1Percentage,css:{win:counter1Percentage() > 50.0,lose:counter1Percentage() < 50.0}"></span></td>
+                <td><span data-bind="text:counter2Percentage,css:{win:counter2Percentage() > 50.0,lose:counter2Percentage() < 50.0}"></span></td>
             </tr>
             <!-- /ko -->
         </tbody>
-    </table>    
+    </table>
+    <!-- /ko -->
 </body>
 </html>

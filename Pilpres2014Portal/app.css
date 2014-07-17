@@ -34,3 +34,19 @@ table tbody {
     background: black;
     color: white;
 }
+
+.win {
+    background:#b0ffaa;
+}
+
+.lose {
+    background:#ffdfdf;
+}
+
+.caption {
+    font-size:12px;
+}
+
+a {
+    font-size:12px;
+}
