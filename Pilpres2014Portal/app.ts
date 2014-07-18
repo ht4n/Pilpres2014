@@ -31,7 +31,7 @@ class Pilpres2014 {
     showProvinceDetails: KnockoutObservable<boolean>;
     toggleProvinceText: KnockoutObservable<string>;
     historicalFeeds: KnockoutObservableArray<any>;
-    datetime: string;
+    selectedDataFeed: KnockoutObservable<{ datetime: string; url: string; }>;
 
     constructor() {
         this.url = ko.observable("https://github.com/ht4n/Pilpres2014");
@@ -49,16 +49,21 @@ class Pilpres2014 {
             { "datetime": "2014-07-17-03-AM", "url": baseFeedUrl },
             { "datetime": "2014-07-17-04-AM", "url": baseFeedUrl },
             { "datetime": "2014-07-17-08-AM", "url": baseFeedUrl },
-            { "datetime": "2014-07-17-09-AM", "url": baseFeedUrl }
+            { "datetime": "2014-07-17-09-AM", "url": baseFeedUrl },
+            { "datetime": "2014-07-17-09-PM", "url": baseFeedUrl }
         ]);
-
-        // Sets the current one
+        
+        // Sets the current feed (latest) one
         var historicalFeedsLength = this.historicalFeeds().length;
-        this.datetime = this.historicalFeeds()[historicalFeedsLength - 1].datetime;
+        var currentFeedItem = this.historicalFeeds()[historicalFeedsLength - 1];
+        this.selectedDataFeed = ko.observable(currentFeedItem);
+        this.selectedDataFeed.subscribe((value) => {
+            this.refresh(value.datetime);
+        });
 
-        this.toggleProvinceText = ko.observable("Show Details");
+        this.toggleProvinceText = ko.observable("Show votes by province");
 
-        this.refresh(this.datetime);
+        this.refresh(this.selectedDataFeed().datetime);
     }
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
@@ -69,11 +74,11 @@ class Pilpres2014 {
     toggleProvinceDetails() {
         if (this.showProvinceDetails()) {
             this.showProvinceDetails(false);
-            this.toggleProvinceText("Show Details");
+            this.toggleProvinceText("Show votes by province");
         }
         else {
             this.showProvinceDetails(true);
-            this.toggleProvinceText("Hide Details");
+            this.toggleProvinceText("Hide votes by province");
 
             var self = this;
             var provinceCallback = function (data, status) {
@@ -97,7 +102,7 @@ class Pilpres2014 {
                 });
             }
 
-            this.query("KPU-Feeds-" + this.datetime + "-province.json", null, provinceCallback);
+            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + "-province.json", null, provinceCallback);
         }
     }
 
