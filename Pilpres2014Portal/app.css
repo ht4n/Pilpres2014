@@ -51,3 +51,13 @@ table tbody {
 a {
     font-size:12px;
 }
+
+.redSeparator {
+    height:4px;
+    background:red;
+}
+
+.blackSeparator {
+    height:4px;
+    background:black;
+}

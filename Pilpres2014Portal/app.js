@@ -3,9 +3,9 @@
 var VoteEntry = (function () {
     function VoteEntry() {
         this.counter1 = ko.observable(0);
-        this.counter1Percentage = ko.observable(0);
+        this.counter1Percentage = ko.observable("");
         this.counter2 = ko.observable(0);
-        this.counter2Percentage = ko.observable(0);
+        this.counter2Percentage = ko.observable("");
         this.total = ko.observable(0);
         this.label = ko.observable("");
     }
@@ -65,9 +65,9 @@ var Pilpres2014 = (function () {
                 dataJson.forEach(function (entry) {
                     var voteEntry = new VoteEntry();
                     voteEntry.counter1(entry.PrabowoHattaVotes);
-                    voteEntry.counter1Percentage(entry.PrabowoHattaPercentage.toFixed(2));
+                    voteEntry.counter1Percentage(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
                     voteEntry.counter2(entry.PrabowoHattaVotes);
-                    voteEntry.counter2Percentage(entry.JokowiKallaPercentage.toFixed(2));
+                    voteEntry.counter2Percentage(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
                     voteEntry.total(entry.Total);
                     voteEntry.label(entry.Province);
 

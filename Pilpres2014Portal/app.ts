@@ -3,17 +3,17 @@
 
 class VoteEntry {
     counter1: KnockoutObservable<number>;
-    counter1Percentage: KnockoutObservable<number>;
+    counter1Percentage: KnockoutObservable<string>;
     counter2: KnockoutObservable<number>;
-    counter2Percentage: KnockoutObservable<number>;
+    counter2Percentage: KnockoutObservable<string>;
     total: KnockoutObservable<number>;
     label: KnockoutObservable<string>;
 
     constructor() {
         this.counter1 = ko.observable(0);
-        this.counter1Percentage = ko.observable(0);
+        this.counter1Percentage = ko.observable("");
         this.counter2 = ko.observable(0);
-        this.counter2Percentage = ko.observable(0);
+        this.counter2Percentage = ko.observable("");
         this.total = ko.observable(0);
         this.label = ko.observable("");
     }
@@ -87,9 +87,9 @@ class Pilpres2014 {
                 dataJson.forEach((entry) => {
                     var voteEntry = new VoteEntry();
                     voteEntry.counter1(entry.PrabowoHattaVotes);
-                    voteEntry.counter1Percentage(entry.PrabowoHattaPercentage.toFixed(2));
+                    voteEntry.counter1Percentage(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
                     voteEntry.counter2(entry.PrabowoHattaVotes);
-                    voteEntry.counter2Percentage(entry.JokowiKallaPercentage.toFixed(2));
+                    voteEntry.counter2Percentage(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
                     voteEntry.total(entry.Total);
                     voteEntry.label(entry.Province);
 
