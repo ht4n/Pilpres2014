@@ -31,9 +31,11 @@ class Pilpres2014 {
     showProvinceDetails: KnockoutObservable<boolean>;
     toggleProvinceText: KnockoutObservable<string>;
     historicalFeeds: KnockoutObservableArray<any>;
-    selectedDataFeed: KnockoutObservable<{ datetime: string; url: string; }>;
+    selectedDataFeed: KnockoutObservable<{ datetime: string; }>;
+    baseFeedUrl: string;
 
     constructor() {
+        var self = this;
         this.url = ko.observable("https://github.com/ht4n/Pilpres2014");
         this.provinces = ko.observableArray([]);
         this.totalVotes1 = ko.observable(0);
@@ -44,26 +46,34 @@ class Pilpres2014 {
         this.voteEntries = ko.observableArray([]);
         this.showProvinceDetails = ko.observable(false);
 
-        var baseFeedUrl = "https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-";
-        this.historicalFeeds = ko.observableArray([
-            { "datetime": "2014-07-17-03-AM", "url": baseFeedUrl },
-            { "datetime": "2014-07-17-04-AM", "url": baseFeedUrl },
-            { "datetime": "2014-07-17-08-AM", "url": baseFeedUrl },
-            { "datetime": "2014-07-17-09-AM", "url": baseFeedUrl },
-            { "datetime": "2014-07-17-09-PM", "url": baseFeedUrl }
-        ]);
-        
-        // Sets the current feed (latest) one
-        var historicalFeedsLength = this.historicalFeeds().length;
-        var currentFeedItem = this.historicalFeeds()[historicalFeedsLength - 1];
-        this.selectedDataFeed = ko.observable(currentFeedItem);
-        this.selectedDataFeed.subscribe((value) => {
-            this.refresh(value.datetime);
+        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-";
+        this.historicalFeeds = ko.observableArray([]);
+        this.selectedDataFeed = ko.observable(null);
+     
+        this.query("feedsources.json", null, (data, status) => {
+            console.log("response:" + status);
+            if (status !== "success") {
+                return;
+            }
+
+            var dataJson = JSON.parse(data);
+            dataJson.forEach((entry) => {
+                self.historicalFeeds.push(entry);
+            });
+
+            // Sets the current feed (latest) one
+            var historicalFeedsLength = this.historicalFeeds().length;
+            var currentFeedItem = this.historicalFeeds()[historicalFeedsLength - 1];
+            this.selectedDataFeed(currentFeedItem);
+
+            this.refresh(this.selectedDataFeed().datetime);
+
+            this.selectedDataFeed.subscribe((value: { datetime: string }) => {
+                this.refresh(value.datetime);
+            });           
         });
 
         this.toggleProvinceText = ko.observable("Show votes by province");
-
-        this.refresh(this.selectedDataFeed().datetime);
     }
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {

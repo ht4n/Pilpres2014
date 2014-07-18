@@ -14,7 +14,7 @@
 <body>
     <div class="pageTitle">Pilpres 2014 - Real Count</div>
     <div><span class="caption">last update: 7/17/2014 10 PM PST</span></div>
-    <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">pilpres2014.KPU.go.id</a></span></div>
+    <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">Formulir DA1 - pilpres2014.KPU.go.id</a></span></div>
     <div><span class="caption">contact us: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a></span></div>
     <hr/>
 
@@ -51,13 +51,13 @@
 
     <select data-bind="options:historicalFeeds, optionsText: function(item) { return item.datetime }, value:selectedDataFeed"></select>
     <!-- ko with:selectedDataFeed -->
-    <a data-bind="attr:{href:url + datetime + '.csv'}">complete</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '.csv'}">complete</a>
     |
-    <a data-bind="attr:{href:url + datetime + '-total.json'}">national</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-total.json'}">national</a>
     |
-    <a data-bind="attr:{href:url + datetime + '-province.json'}">province</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-province.json'}">province</a>
     |
-    <a data-bind="attr:{href:url + datetime + '-kabupaten.json'}">kabupaten</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten.json'}">kabupaten</a>
     <!-- /ko -->
     <div>
         <span class="caption">
