@@ -543,7 +543,6 @@ namespace Pilpres2014
             CountVotes(tableFile, outputFile, threadCount);
             sw.Stop();
             Console.WriteLine("> Completed crawling in {0} minutes. Press any key to continue ...", sw.Elapsed.Minutes);
-            Console.ReadLine();
         }
     }
 }
