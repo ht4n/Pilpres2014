@@ -1,18 +1,19 @@
 ﻿body {
     font-family: 'tahoma', 'Segoe UI', sans-serif;
-    width: 99%;
 }
 
 span {
     font-size: 18px;
 }
 
-table {
-    width: 100%
-}
-
 table tbody {
     text-align: center;
+}
+
+.scoreTable {
+    margin-left: 0%;
+    margin-right: 0%;
+    width: 100%;
 }
 
 .pageTitle {
@@ -23,7 +24,7 @@ table tbody {
 }
 
 .score {
-    font-size: 50px;
+    font-size: 40px;
 }
 
 .candidate1 {
