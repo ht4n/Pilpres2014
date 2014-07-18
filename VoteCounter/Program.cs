@@ -331,6 +331,7 @@ namespace Pilpres2014
             String kabupatenName = "";
 
             Stopwatch timer = new Stopwatch();
+            timer.Start();
             using (StreamWriter sw = new StreamWriter(outputFile))
             {
                 sw.AutoFlush = true;
@@ -370,6 +371,7 @@ namespace Pilpres2014
                         line = sr.ReadLine();
                     }
 
+                    timer.Stop();
                     Console.WriteLine("> Crawler has finished iterating all provinces/kabupatens/kecamatans in {0} minutes", timer.Elapsed.Minutes);
                     Console.WriteLine("> Waiting until all outstanding worker threads completed their jobs ... (timeout in 30 secs)");
                     SpinWait.SpinUntil(() => { return s_outstandingWorkItems == -1; }, 10000);
@@ -537,8 +539,9 @@ namespace Pilpres2014
             Console.WriteLine("> Output path: {0}", outputFile);
 
             Stopwatch sw = new Stopwatch();
+            sw.Start();
             CountVotes(tableFile, outputFile, threadCount);
-
+            sw.Stop();
             Console.WriteLine("> Completed crawling in {0} minutes. Press any key to continue ...", sw.Elapsed.Minutes);
             Console.ReadLine();
         }
