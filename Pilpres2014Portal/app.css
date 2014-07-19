@@ -23,13 +23,28 @@ table tbody {
     font-size: 24px;
 }
 
-.score {
+.section {
+    background: #2A0438;
+    color: white;
+    padding: 4px;
+    font-size: 18px;
+}
+
+.bigScore {
     font-size: 40px;
+}
+
+.smallScore {
+    font-size: 11px;
 }
 
 .candidate1 {
     background: red;
     color: white;
+}
+
+.neural {
+    background:#1371c1
 }
 
 .candidate2 {

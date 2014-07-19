@@ -13,11 +13,9 @@
 </head>
 <body>
     <div class="pageTitle">Pilpres 2014 - DA1 Count</div>
-    <div><span class="caption">last update: 7/17/2014 10 PM PST</span></div>
-    <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">Formulir DA1 - pilpres2014.KPU.go.id</a></span></div>
-    <div><span class="caption">contact us: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a></span></div>
     <hr/>
-
+    
+    <div><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
     <table class="scoreTable">
         <thead>
             <tr>
@@ -28,10 +26,10 @@
         <tbody>
             <tr>
                 <td>
-                    <span class="score" data-bind="text:percentageVotes1"></span>
+                    <span data-bind="text:percentageVotes1,attr:{class:status1()}"></span>
                 </td>
                 <td>
-                    <span class="score" data-bind="text:percentageVotes2"></span>
+                    <span data-bind="text:percentageVotes2,attr:{class:status2()}"></span>
                 </td>
             </tr>
             <tr>
@@ -40,15 +38,32 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <div class="blackSeparator"></div>
                     <div class="redSeparator"></div>
+                    <div class="blackSeparator"></div>
                 </td>
             </tr>
         </tbody>
     </table>
-    <hr/>    
-    <h3>Historical Data:</h3>
 
+    <table class="scoreTable">
+        <tbody>
+            <!-- ko foreach:voteEntries -->
+            <!-- ko if:$index() != 0-->
+            <tr>
+                <td>
+                    <span class="caption" data-bind="text:percentageVotes1,attr:{class:status1()}"></span>
+                </td>
+                <td><span class="caption" data-bind="text:label"></span></td>
+                <td>
+                    <span class="caption" data-bind="text:percentageVotes2,attr:{class:status2()}"></span>
+                </td>
+            </tr>
+            <!-- /ko -->
+            <!-- /ko -->
+        </tbody>
+    </table>
+    <hr/>    
+    <div class="section">Downlaods Historical Data:</div>
     <select data-bind="options:historicalFeeds, optionsText: function(item) { return item.datetime }, value:selectedDataFeed"></select>
     <!-- ko with:selectedDataFeed -->
     <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '.csv'}">complete</a>
@@ -59,6 +74,8 @@
     |
     <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten.json'}">kabupaten</a>
     <!-- /ko -->
+    
+    <hr />
     <div>
         <span class="caption">
             The data is obtained by automatic crawling http://pilpres2014.kpu.go.id periodically and updated every 6-12 hours.
@@ -71,6 +88,8 @@
     <div>
         <span class="caption">The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.</span>
     </div>
+    <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">Formulir DA1 - pilpres2014.KPU.go.id</a></span></div>
+    <div><span class="caption">contact us: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a></span></div>
     <hr />
 
     <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText">Show Details</a>
@@ -85,11 +104,11 @@
             </tr>
         </thead>
         <tbody>
-            <!-- ko foreach:voteEntries -->
+            <!-- ko foreach:provinceVoteEntries -->
             <tr>
                 <td><span data-bind="text:label"></span></td>
-                <td><span data-bind="text:counter1Percentage,css:{win:counter1Percentage() > 50.0,lose:counter1Percentage() < 50.0}"></span></td>
-                <td><span data-bind="text:counter2Percentage,css:{win:counter2Percentage() > 50.0,lose:counter2Percentage() < 50.0}"></span></td>
+                <td><span data-bind="text:percentageVotes1,css:{win:percentageVotes1() > 50.0,lose:percentageVotes1() < 50.0}"></span></td>
+                <td><span data-bind="text:percentageVotes2,css:{win:percentageVotes2() > 50.0,lose:percentageVotes2() < 50.0}"></span></td>
             </tr>
             <!-- /ko -->
         </tbody>
