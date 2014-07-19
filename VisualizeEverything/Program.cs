@@ -51,13 +51,35 @@ namespace VisualizeEverything
     {
         static String lastKabupaten = "";
         static String lastProvince = "";
-        
+        static String maxDepth = "Province";
+
         static void PrintTab(StreamWriter sw, int level)
         {
             for (int i = 0; i < level * 4; ++i)
             {
                 sw.Write(" ");
             }
+        }
+
+        static String CountKecamatans(StreamReader sr, String line, int columnId, out UInt32 sum)
+        {
+            String[] tokens = line.Split(',');
+            sum = 0;
+            
+            while (!sr.EndOfStream && !String.IsNullOrEmpty(line))
+            {
+                sum += UInt32.Parse(tokens[columnId]);
+                
+                line = sr.ReadLine();
+                tokens = line.Split(',');
+
+                if (lastKabupaten != tokens[3])
+                {
+                    return line;
+                }
+            }
+
+            return line;
         }
 
         static String WriteKecamatans(StreamWriter sw, StreamReader sr, String line, int columnId, int level)
@@ -86,6 +108,27 @@ namespace VisualizeEverything
             return line;
         }
 
+        static String CountKabupatens(StreamReader sr, String line, int columnId, out UInt32 sum)
+        {
+            String[] tokens = line.Split(',');
+            sum = 0;
+
+            while (!sr.EndOfStream && !String.IsNullOrEmpty(line))
+            {
+                sum += UInt32.Parse(tokens[columnId]);
+
+                line = sr.ReadLine();
+                tokens = line.Split(',');
+
+                if (lastProvince != tokens[1])
+                {
+                    return line;
+                }
+            }
+
+            return line;
+        }
+
         static String WriteKabupatens(StreamWriter sw, StreamReader sr, String line, int columnId, int level)
         {
             String[] tokens = line.Split(',');
@@ -96,24 +139,37 @@ namespace VisualizeEverything
                 {
                     sw.WriteLine(",");
                 }
-
-                PrintTab(sw, level + 1);
-                sw.WriteLine("{");
-                PrintTab(sw, level + 2);
-                sw.WriteLine("\"name\":\"{0}\",", tokens[3]);
-                PrintTab(sw, level + 2);
-                sw.WriteLine("\"children\": [");
+                
+                String kabupatenName = tokens[3];
 
                 // Remember current kabupaten
                 lastKabupaten = tokens[3];
 
-                line = WriteKecamatans(sw, sr, line, columnId, level + 2);
+                if (maxDepth == "Kabupaten")
+                {
+                    UInt32 curSum = 0;
+                    line = CountKecamatans(sr, line, columnId, out curSum);
+        
+                    PrintTab(sw, level + 1);
+                    sw.Write("{{ \"name\":\"{0}\", \"size\":\"{1}\" }}", kabupatenName, curSum);
+                }
+                else
+                {
+                    PrintTab(sw, level + 1);
+                    sw.WriteLine("{");
+                    PrintTab(sw, level + 2);
+                    sw.WriteLine("\"name\":\"{0}\",", kabupatenName);
+                    PrintTab(sw, level + 2);
+                    sw.WriteLine("\"children\": [");
 
-                sw.WriteLine("");
-                PrintTab(sw, level + 2);
-                sw.WriteLine("]");
-                PrintTab(sw, level + 1);
-                sw.Write("}");
+                    line = WriteKecamatans(sw, sr, line, columnId, level + 2);
+
+                    sw.WriteLine("");
+                    PrintTab(sw, level + 2);
+                    sw.WriteLine("]");
+                    PrintTab(sw, level + 1);
+                    sw.Write("}");
+                }
 
                 tokens = line.Split(',');
                 if (lastProvince != tokens[1])
@@ -136,24 +192,35 @@ namespace VisualizeEverything
                     sw.WriteLine(",");
                 }
 
-                PrintTab(sw, level + 1);
-                sw.WriteLine("{");
-                PrintTab(sw, level + 2);
-                sw.WriteLine("\"name\":\"{0}\",", tokens[1]);
-                PrintTab(sw, level + 2);
-                sw.WriteLine("\"children\": [");
-
                 // Remember current province
                 lastProvince = tokens[1];
-                
-                line = WriteKabupatens(sw, sr, line, columnId, level + 2);
-                tokens = line.Split(',');
 
-                sw.WriteLine("");
-                PrintTab(sw, level + 2);
-                sw.WriteLine("]");
-                PrintTab(sw, level + 1);
-                sw.Write("}");
+                if (maxDepth == "Province")
+                {
+                    UInt32 sum = 0;
+                    line = CountKabupatens(sr, line, columnId, out sum);
+                    PrintTab(sw, level + 1);
+                    sw.Write("{{ \"name\":\"{0}\", \"size\":\"{1}\" }}", tokens[1], sum);
+                }
+                else
+                {
+                    PrintTab(sw, level + 1);
+                    sw.WriteLine("{");
+                    PrintTab(sw, level + 2);
+                    sw.WriteLine("\"name\":\"{0}\",", tokens[1]);
+                    PrintTab(sw, level + 2);
+                    sw.WriteLine("\"children\": [");
+                
+                    line = WriteKabupatens(sw, sr, line, columnId, level + 2);
+
+                    sw.WriteLine("");
+                    PrintTab(sw, level + 2);
+                    sw.WriteLine("]");
+                    PrintTab(sw, level + 1);
+                    sw.Write("}");
+                }
+
+                tokens = line.Split(',');                
             }
 
             return line;
@@ -179,14 +246,15 @@ namespace VisualizeEverything
 
         static void Main(string[] args)
         {
-            if (args.Length != 2)
+            if (args.Length != 3)
             {
-                Console.WriteLine("Syntax: VisualizeEverything.exe <input> <output>");
+                Console.WriteLine("Syntax: VisualizeEverything.exe <input> <output> <filter:Province|Kabupaten|Kecamatan>");
                 return;
             }
 
             String inputCsv = args[0];
             String output = args[1];
+            maxDepth = args[2];
             using (StreamWriter sw = new StreamWriter(output))
             {
                 sw.WriteLine("{");

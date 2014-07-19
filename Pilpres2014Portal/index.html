@@ -12,9 +12,19 @@
     <script src="app.js"></script>
 </head>
 <body>
-    <div class="pageTitle">Pilpres 2014 - DA1 Count</div>
-    <hr/>
+    <div id="fb-root"></div>
+    <script>
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&appId=851956344818547&version=v2.0";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+    </script>
     
+    <div class="pageTitle">Pilpres 2014 - DA1 Count</div>
+    <hr/>    
     <div><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
     <table class="scoreTable">
         <thead>
@@ -48,7 +58,7 @@
     <table class="scoreTable">
         <tbody>
             <!-- ko foreach:voteEntries -->
-            <!-- ko if:$index() != 0-->
+            <!-- ko if:$index() > 0 && $index() < 10 -->
             <tr>
                 <td>
                     <span class="caption" data-bind="text:percentageVotes1,attr:{class:status1()}"></span>
@@ -62,8 +72,24 @@
             <!-- /ko -->
         </tbody>
     </table>
+    <hr/>
+    <!-- FB-like and Twitter tweets -->
+    <div class="fb-like" data-href="http://www.pilpres2014.org" data-layout="standard" data-action="like" data-show-faces="true" data-share="true"></div>
+    <div>
+        <a href="https://twitter.com/share" class="twitter-share-button" data-via="HonestDemocracy" data-hashtags="Pilpres2014">Tweet</a>
+        <script>!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } }(document, 'script', 'twitter-wjs');</script>
+    </div>
+    <hr />    
+    <div class="section">Data Visualization:</div>
+    <a class="caption" href="bubleviz.html">Bubble Dynamic Pack</a>
+    |
+    <a class="caption" href="bublevisstatic.html">Bobba Static Pack</a>
+    |
+    <a class="caption" href="vizindex.html">Difference</a>
+    |
+    <a class="caption" href="barhierarchy.html">Interactive HBar</a>
     <hr/>    
-    <div class="section">Downlaods Historical Data:</div>
+    <div class="section">Downloads Historical Data:</div>
     <select data-bind="options:historicalFeeds, optionsText: function(item) { return item.datetime }, value:selectedDataFeed"></select>
     <!-- ko with:selectedDataFeed -->
     <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '.csv'}">complete</a>
@@ -75,23 +101,8 @@
     <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten.json'}">kabupaten</a>
     <!-- /ko -->
     
-    <hr />
-    <div>
-        <span class="caption">
-            The data is obtained by automatic crawling http://pilpres2014.kpu.go.id periodically and updated every 6-12 hours.
-            This website is not an official KPU website and although the numbers are automatically crawled from pilpres2014.kpu.go.id you should not treat this as official numbers.
-            
-            DA1 data that is sent from the District is a result that has been decided on its level and not at the national level and not the final results because the data may change according 
-            to the results of a plenary meeting on the level above or at the level of the central plenum.
-        </span>
-    </div>
-    <div>
-        <span class="caption">The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.</span>
-    </div>
-    <div><span class="caption">source: <a href="http://pilpres2014.kpu.go.id/da1.php">Formulir DA1 - pilpres2014.KPU.go.id</a></span></div>
-    <div><span class="caption">contact us: <a href="mailto:pilpres2014@outlook.com">pilpres2014</a></span></div>
-    <hr />
-
+    <hr />   
+    <div class="section">Provincial Votes:</div>
     <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText">Show Details</a>
     <hr />
     <!-- ko if:showProvinceDetails -->
@@ -114,5 +125,32 @@
         </tbody>
     </table>
     <!-- /ko -->
+
+    <div>
+        <span class="footer">
+            The data is obtained by automatic crawling http://pilpres2014.kpu.go.id periodically and updated every 6-12 hours.
+            This website is not an official KPU website and although the numbers are automatically crawled from pilpres2014.kpu.go.id you should not treat this as official numbers.
+
+            DA1 data that is sent from the District is a result that has been decided on its level and not at the national level and not the final results because the data may change according
+            to the results of a plenary meeting on the level above or at the level of the central plenum.
+
+            The motivation for this website is to make the #pilpres2014 data available to public as quick as possible with the widest possible reach and so that the world can be the Watchdogs 
+            for an honest, clean, respectable and integral democracy process.
+        </span>
+    </div>
+    <div class="paragraph">
+        <span class="footer">This site is built on top of <a href="http://azure.microsoft.com/">Windows Azure USA</a> cloud technology and many open source technologies such as <a href="http://knockoutjs.com">KnockoutJS</a>, 
+        <a href="http://jquery.com">JQuery</a>, <a href="http://microsoft.com/net">.NET Framework</a>, HTML5, <a href="http://github.com">GitHub</a>, <a href="http://visualstudio.com/">Visual Studio 2013</a>, <a href="http://d3js.org">D3 Visualization</a></span>
+    </div>
+    <div class="paragraph">
+        <span class="footer">The source-code is shared in <a href="https://github.com/ht4n/Pilpres2014">Pilpres2014 GitHub</a> under APACHE 2.0 license.</span>
+    </div>
+    <div class="paragraph"><span class="footer">Data Source: <a href="http://pilpres2014.kpu.go.id/da1.php">Formulir DA1 - pilpres2014.KPU.go.id</a></span></div>
+    <hr />
+    <div class="paragraph">
+        <span class="footer">Development Team Leader: <a href="http://ht4n.blogspot.com">Henry Tan Setiawan</a></span>
+        <span class="footer">Twitter: @HonestDemocracy</span>
+        <span class="footer">Contact Us: <a href="mailto:pilpres2014@outlook.com">e-mail</a></span>
+    </div>
 </body>
 </html>
