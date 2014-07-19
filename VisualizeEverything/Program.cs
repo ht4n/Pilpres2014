@@ -145,7 +145,7 @@ namespace VisualizeEverything
                 // Remember current kabupaten
                 lastKabupaten = tokens[3];
 
-                if (maxDepth == "Kabupaten")
+                if (maxDepth.Equals("Kabupaten", StringComparison.InvariantCultureIgnoreCase))
                 {
                     UInt32 curSum = 0;
                     line = CountKecamatans(sr, line, columnId, out curSum);
@@ -195,7 +195,7 @@ namespace VisualizeEverything
                 // Remember current province
                 lastProvince = tokens[1];
 
-                if (maxDepth == "Province")
+                if (maxDepth.Equals("Province", StringComparison.InvariantCultureIgnoreCase))
                 {
                     UInt32 sum = 0;
                     line = CountKabupatens(sr, line, columnId, out sum);

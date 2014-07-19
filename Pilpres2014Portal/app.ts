@@ -57,7 +57,7 @@ class Pilpres2014 {
         this.provinceVoteEntries = ko.observableArray([]);
         this.showProvinceDetails = ko.observable(false);
 
-        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-";
+        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
         this.lastUpdatedTime = ko.observable("");
@@ -136,7 +136,20 @@ class Pilpres2014 {
             }
 
             var dataJson = JSON.parse(data);
-            dataJson.forEach((entry: { PrabowoHattaVotes: string; JokowiKallaVotes: string; PrabowoHattaPercentage: string; JokowiKallaPercentage: string; Total: string }) => {
+        
+            for (var i = 0; i < dataJson.length; ++i) {
+                if (i > 10) {
+                    break;
+                }
+
+                var entry: {
+                    PrabowoHattaVotes: string;
+                    JokowiKallaVotes: string;
+                    PrabowoHattaPercentage: string;
+                    JokowiKallaPercentage: string;
+                    Total: string
+                } = dataJson[i];
+
                 var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(entry.PrabowoHattaVotes);
@@ -151,7 +164,7 @@ class Pilpres2014 {
                 voteEntry.label(context);
 
                 self.voteEntries.push(voteEntry);
-            });
+            };
 
             if (self.voteEntries().length > 0) {
                 var firstEntry = self.voteEntries()[0];

@@ -31,7 +31,7 @@ var Pilpres2014 = (function () {
         this.provinceVoteEntries = ko.observableArray([]);
         this.showProvinceDetails = ko.observable(false);
 
-        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-";
+        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
         this.lastUpdatedTime = ko.observable("");
@@ -103,15 +103,21 @@ var Pilpres2014 = (function () {
         self.voteEntries.removeAll();
 
         var totalCallback = function (data, status) {
-            var _this = this;
             console.log("response:" + status);
             if (status !== "success") {
                 return;
             }
 
             var dataJson = JSON.parse(data);
-            dataJson.forEach(function (entry) {
-                var context = _this;
+
+            for (var i = 0; i < dataJson.length; ++i) {
+                if (i > 10) {
+                    break;
+                }
+
+                var entry = dataJson[i];
+
+                var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(entry.PrabowoHattaVotes);
                 voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
@@ -125,7 +131,8 @@ var Pilpres2014 = (function () {
                 voteEntry.label(context);
 
                 self.voteEntries.push(voteEntry);
-            });
+            }
+            ;
 
             if (self.voteEntries().length > 0) {
                 var firstEntry = self.voteEntries()[0];
