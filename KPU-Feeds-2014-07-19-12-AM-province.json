@@ -1,0 +1,265 @@
+[
+{
+    "Province":"ACEH",
+    "PrabowoHattaVotes":"939088",
+    "PrabowoHattaPercentage":"55.5721",
+    "JokowiKallaVotes":"750767",
+    "JokowiKallaPercentage":"44.4279",
+    "Total":"1689855"
+},
+{
+    "Province":"SUMATERA UTARA",
+    "PrabowoHattaVotes":"2420630",
+    "PrabowoHattaPercentage":"45.3118",
+    "JokowiKallaVotes":"2921534",
+    "JokowiKallaPercentage":"54.6882",
+    "Total":"5342164"
+},
+{
+    "Province":"SUMATERA BARAT",
+    "PrabowoHattaVotes":"1754861",
+    "PrabowoHattaPercentage":"77.8672",
+    "JokowiKallaVotes":"498797",
+    "JokowiKallaPercentage":"22.1328",
+    "Total":"2253658"
+},
+{
+    "Province":"RIAU",
+    "PrabowoHattaVotes":"1349338",
+    "PrabowoHattaPercentage":"50.1211",
+    "JokowiKallaVotes":"1342817",
+    "JokowiKallaPercentage":"49.8789",
+    "Total":"2692155"
+},
+{
+    "Province":"JAMBI",
+    "PrabowoHattaVotes":"866190",
+    "PrabowoHattaPercentage":"49.1856",
+    "JokowiKallaVotes":"894875",
+    "JokowiKallaPercentage":"50.8144",
+    "Total":"1761065"
+},
+{
+    "Province":"SUMATERA SELATAN",
+    "PrabowoHattaVotes":"1085704",
+    "PrabowoHattaPercentage":"53.4960",
+    "JokowiKallaVotes":"943803",
+    "JokowiKallaPercentage":"46.5041",
+    "Total":"2029507"
+},
+{
+    "Province":"BENGKULU",
+    "PrabowoHattaVotes":"433173",
+    "PrabowoHattaPercentage":"45.2711",
+    "JokowiKallaVotes":"523669",
+    "JokowiKallaPercentage":"54.7289",
+    "Total":"956842"
+},
+{
+    "Province":"LAMPUNG",
+    "PrabowoHattaVotes":"1916204",
+    "PrabowoHattaPercentage":"47.1979",
+    "JokowiKallaVotes":"2143732",
+    "JokowiKallaPercentage":"52.8021",
+    "Total":"4059936"
+},
+{
+    "Province":"KEPULAUAN BANGKA BELITUNG",
+    "PrabowoHattaVotes":"123478",
+    "PrabowoHattaPercentage":"31.6890",
+    "JokowiKallaVotes":"266178",
+    "JokowiKallaPercentage":"68.3110",
+    "Total":"389656"
+},
+{
+    "Province":"KEPULAUAN RIAU",
+    "PrabowoHattaVotes":"332912",
+    "PrabowoHattaPercentage":"40.3661",
+    "JokowiKallaVotes":"491819",
+    "JokowiKallaPercentage":"59.6339",
+    "Total":"824731"
+},
+{
+    "Province":"DKI JAKARTA",
+    "PrabowoHattaVotes":"2528770",
+    "PrabowoHattaPercentage":"46.9143",
+    "JokowiKallaVotes":"2861417",
+    "JokowiKallaPercentage":"53.0857",
+    "Total":"5390187"
+},
+{
+    "Province":"JAWA BARAT",
+    "PrabowoHattaVotes":"12508837",
+    "PrabowoHattaPercentage":"59.8752",
+    "JokowiKallaVotes":"8382688",
+    "JokowiKallaPercentage":"40.1248",
+    "Total":"20891525"
+},
+{
+    "Province":"JAWA TENGAH",
+    "PrabowoHattaVotes":"5005407",
+    "PrabowoHattaPercentage":"33.8514",
+    "JokowiKallaVotes":"9781022",
+    "JokowiKallaPercentage":"66.1486",
+    "Total":"14786429"
+},
+{
+    "Province":"DAERAH ISTIMEWA YOGYAKARTA",
+    "PrabowoHattaVotes":"977342",
+    "PrabowoHattaPercentage":"44.1918",
+    "JokowiKallaVotes":"1234249",
+    "JokowiKallaPercentage":"55.8082",
+    "Total":"2211591"
+},
+{
+    "Province":"JAWA TIMUR",
+    "PrabowoHattaVotes":"8204414",
+    "PrabowoHattaPercentage":"47.4373",
+    "JokowiKallaVotes":"9090849",
+    "JokowiKallaPercentage":"52.5627",
+    "Total":"17295263"
+},
+{
+    "Province":"BANTEN",
+    "PrabowoHattaVotes":"3192671",
+    "PrabowoHattaPercentage":"57.1007",
+    "JokowiKallaVotes":"2398631",
+    "JokowiKallaPercentage":"42.8993",
+    "Total":"5591302"
+},
+{
+    "Province":"BALI",
+    "PrabowoHattaVotes":"614241",
+    "PrabowoHattaPercentage":"28.5780",
+    "JokowiKallaVotes":"1535110",
+    "JokowiKallaPercentage":"71.4220",
+    "Total":"2149351"
+},
+{
+    "Province":"NUSA TENGGARA BARAT",
+    "PrabowoHattaVotes":"1838614",
+    "PrabowoHattaPercentage":"72.4738",
+    "JokowiKallaVotes":"698323",
+    "JokowiKallaPercentage":"27.5262",
+    "Total":"2536937"
+},
+{
+    "Province":"NUSA TENGGARA TIMUR",
+    "PrabowoHattaVotes":"656250",
+    "PrabowoHattaPercentage":"32.7034",
+    "JokowiKallaVotes":"1350422",
+    "JokowiKallaPercentage":"67.2966",
+    "Total":"2006672"
+},
+{
+    "Province":"KALIMANTAN BARAT",
+    "PrabowoHattaVotes":"1032355",
+    "PrabowoHattaPercentage":"39.6218",
+    "JokowiKallaVotes":"1573168",
+    "JokowiKallaPercentage":"60.3782",
+    "Total":"2605523"
+},
+{
+    "Province":"KALIMANTAN TENGAH",
+    "PrabowoHattaVotes":"431674",
+    "PrabowoHattaPercentage":"41.5523",
+    "JokowiKallaVotes":"607196",
+    "JokowiKallaPercentage":"58.4477",
+    "Total":"1038870"
+},
+{
+    "Province":"KALIMANTAN SELATAN",
+    "PrabowoHattaVotes":"644114",
+    "PrabowoHattaPercentage":"52.7361",
+    "JokowiKallaVotes":"577278",
+    "JokowiKallaPercentage":"47.2639",
+    "Total":"1221392"
+},
+{
+    "Province":"KALIMANTAN TIMUR",
+    "PrabowoHattaVotes":"578511",
+    "PrabowoHattaPercentage":"37.8952",
+    "JokowiKallaVotes":"948096",
+    "JokowiKallaPercentage":"62.1048",
+    "Total":"1526607"
+},
+{
+    "Province":"SULAWESI UTARA",
+    "PrabowoHattaVotes":"607035",
+    "PrabowoHattaPercentage":"46.7102",
+    "JokowiKallaVotes":"692541",
+    "JokowiKallaPercentage":"53.2898",
+    "Total":"1299576"
+},
+{
+    "Province":"SULAWESI TENGAH",
+    "PrabowoHattaVotes":"509998",
+    "PrabowoHattaPercentage":"46.0913",
+    "JokowiKallaVotes":"596498",
+    "JokowiKallaPercentage":"53.9087",
+    "Total":"1106496"
+},
+{
+    "Province":"SULAWESI SELATAN",
+    "PrabowoHattaVotes":"1158818",
+    "PrabowoHattaPercentage":"29.2159",
+    "JokowiKallaVotes":"2807579",
+    "JokowiKallaPercentage":"70.7841",
+    "Total":"3966397"
+},
+{
+    "Province":"SULAWESI TENGGARA",
+    "PrabowoHattaVotes":"492753",
+    "PrabowoHattaPercentage":"45.2123",
+    "JokowiKallaVotes":"597111",
+    "JokowiKallaPercentage":"54.7877",
+    "Total":"1089864"
+},
+{
+    "Province":"GORONTALO",
+    "PrabowoHattaVotes":"378735",
+    "PrabowoHattaPercentage":"63.0981",
+    "JokowiKallaVotes":"221497",
+    "JokowiKallaPercentage":"36.9019",
+    "Total":"600232"
+},
+{
+    "Province":"SULAWESI BARAT",
+    "PrabowoHattaVotes":"123167",
+    "PrabowoHattaPercentage":"27.9330",
+    "JokowiKallaVotes":"317771",
+    "JokowiKallaPercentage":"72.0671",
+    "Total":"440938"
+},
+{
+    "Province":"MALUKU",
+    "PrabowoHattaVotes":"169989",
+    "PrabowoHattaPercentage":"45.5534",
+    "JokowiKallaVotes":"203175",
+    "JokowiKallaPercentage":"54.4466",
+    "Total":"373164"
+},
+{
+    "Province":"MALUKU UTARA",
+    "PrabowoHattaVotes":"228393",
+    "PrabowoHattaPercentage":"56.6544",
+    "JokowiKallaVotes":"174741",
+    "JokowiKallaPercentage":"43.3456",
+    "Total":"403134"
+},
+{
+    "Province":"PAPUA",
+    "PrabowoHattaVotes":"194279",
+    "PrabowoHattaPercentage":"23.1278",
+    "JokowiKallaVotes":"645746",
+    "JokowiKallaPercentage":"76.8722",
+    "Total":"840025"
+},
+{
+    "Province":"PAPUA BARAT",
+    "PrabowoHattaVotes":"85011",
+    "PrabowoHattaPercentage":"30.9649",
+    "JokowiKallaVotes":"189529",
+    "JokowiKallaPercentage":"69.0351",
+    "Total":"274540"
+}]
