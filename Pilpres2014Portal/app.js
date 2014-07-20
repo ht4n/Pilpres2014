@@ -72,8 +72,8 @@ var Pilpres2014 = (function () {
         } else {
             this.showHistoricalData(true);
             var self = this;
-            self.voteEntries.removeAll();
-            var idx = 0;
+            var voteEntries = [];
+            var dataCount = 0;
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
                 if (status !== "success") {
@@ -96,22 +96,22 @@ var Pilpres2014 = (function () {
                     voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
                     voteEntry.total(entry.Total);
-                    voteEntry.label(context);
+                    voteEntry.label(context.datetime);
 
-                    self.voteEntries.push(voteEntry);
+                    voteEntries[context.id] = voteEntry;
                 }
                 ;
 
-                if (idx < 12) {
-                    console.log("query()" + idx);
-                    var value = self.historicalFeeds()[idx];
-                    self.query("KPU-Feeds-" + value.datetime + "-total.json", value.datetime, historicalDataCallback);
-                    ++idx;
+                ++dataCount;
+                if (dataCount == 12) {
+                    self.voteEntries(voteEntries);
                 }
             };
 
-            var value = this.historicalFeeds()[idx++];
-            this.query("KPU-Feeds-" + value.datetime + "-total.json", value.datetime, historicalDataCallback);
+            for (var i = 0; i < 12; ++i) {
+                var value = this.historicalFeeds()[i];
+                this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
+            }
         }
     };
 

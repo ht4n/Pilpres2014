@@ -102,8 +102,8 @@ class Pilpres2014 {
         else {
             this.showHistoricalData(true);
             var self = this;
-            self.voteEntries.removeAll();
-            var idx = 0;
+            var voteEntries = [];
+            var dataCount = 0;
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
                 if (status !== "success") {
@@ -111,6 +111,7 @@ class Pilpres2014 {
                 }
 
                 var dataJson = JSON.parse(data);
+
                 // Show max first 12 entries
                 for (var i = 0; i < dataJson.length; ++i) {
                     var entry: {
@@ -121,7 +122,7 @@ class Pilpres2014 {
                         Total: string
                     } = dataJson[i];
 
-                    var context = this;
+                    var context: { "datetime": string; "id": number; } = this;
                     var voteEntry = new VoteEntry();
                     voteEntry.totalVotes1(entry.PrabowoHattaVotes);
                     voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
@@ -132,21 +133,21 @@ class Pilpres2014 {
                     voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
                     voteEntry.total(entry.Total);
-                    voteEntry.label(context);
+                    voteEntry.label(context.datetime);
 
-                    self.voteEntries.push(voteEntry);
+                    voteEntries[context.id] = voteEntry;
                 };
 
-                if (idx < 12) {
-                    console.log("query()" + idx);
-                    var value = self.historicalFeeds()[idx];
-                    self.query("KPU-Feeds-" + value.datetime + "-total.json", value.datetime, historicalDataCallback);
-                    ++idx;
+                ++dataCount;
+                if (dataCount == 12) {
+                    self.voteEntries(voteEntries);
                 }
             }
 
-            var value = this.historicalFeeds()[idx++];
-            this.query("KPU-Feeds-" + value.datetime + "-total.json", value.datetime, historicalDataCallback);
+            for (var i = 0; i < 12; ++i) {
+                var value = this.historicalFeeds()[i];
+                this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
+            }
         }
     }
 
