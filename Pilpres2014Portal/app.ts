@@ -139,11 +139,11 @@ class Pilpres2014 {
             dataJson.forEach((entry: { PrabowoHattaVotes: string; JokowiKallaVotes: string; PrabowoHattaPercentage: string; JokowiKallaPercentage: string; Total: string }) => {
                 var context = this;
                 var voteEntry = new VoteEntry();
-                voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                 voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
                 voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
-                voteEntry.totalVotes2(entry.JokowiKallaVotes);
+                voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
                 voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
                 voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
