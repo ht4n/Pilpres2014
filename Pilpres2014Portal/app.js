@@ -109,27 +109,27 @@ var Pilpres2014 = (function () {
         switch (field) {
             case 1:
                 self.provinceVoteEntries.sort(function (a, b) {
-                    return parseFloat(a.percentageVotes1()) - parseFloat(b.percentageVotes1());
+                    return parseFloat(b.percentageVotes1()) - parseFloat(a.percentageVotes1());
                 });
                 break;
             case 2:
                 self.provinceVoteEntries.sort(function (a, b) {
-                    return parseFloat(a.percentageVotes2()) - parseFloat(b.percentageVotes2());
+                    return parseFloat(b.percentageVotes2()) - parseFloat(a.percentageVotes2());
                 });
                 break;
             case 3:
                 self.provinceVoteEntries.sort(function (a, b) {
-                    return a.totalVotes1Raw() - b.totalVotes1Raw();
+                    return b.totalVotes1Raw() - a.totalVotes1Raw();
                 });
                 break;
             case 4:
                 self.provinceVoteEntries.sort(function (a, b) {
-                    return a.totalVotes2Raw() - b.totalVotes2Raw();
+                    return b.totalVotes2Raw() - a.totalVotes2Raw();
                 });
                 break;
             case 5:
                 self.provinceVoteEntries.sort(function (a, b) {
-                    return a.totalVotesRaw() - b.totalVotesRaw();
+                    return b.totalVotesRaw() - a.totalVotesRaw();
                 });
                 break;
         }
