@@ -50,6 +50,17 @@ namespace Pilpres2014
         public String KabupatenCode { get; set; }
         public String ProvinceName { get; set; }
         public String ProvinceCode { get; set; }
+
+        // A simple check that Counter1 + Counter2 must equates to Total
+        public bool CheckVoteIntegrity()
+        {
+            if ((Counter1 + Counter2) != Total)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
     
     public class HierarchicalTally : BinaryTally
@@ -95,6 +106,7 @@ namespace Pilpres2014
         static ManualResetEvent[] s_events;
         static int[] s_threadIds;
         static int s_itemCount = 0;
+        static List<String> s_badDataList = new List<string>();
 
         // This variable is for debugging. If it is not for debugging set this to UINT32_MAX
         static UInt32 s_maxItems = UInt32.MaxValue;
@@ -450,12 +462,38 @@ namespace Pilpres2014
                                     Console.Write(logPayload);
                                     swKabupaten.Write(logPayload);
 
+                                    if (!kecamatanEnumerator.Current.Value.CheckVoteIntegrity())
+                                    {
+                                        // Moves on but logs these data for reporting
+                                        String log = String.Format("Bad data integrity for Kecamatan {0}:{1}, vote1 {2} plus vote2 {3} does not equate to total {4}",
+                                            kecamatanEnumerator.Current.Value.KecamatanCode,
+                                            kecamatanEnumerator.Current.Value.KecamatanName,
+                                            kecamatanEnumerator.Current.Value.Counter1,
+                                            kecamatanEnumerator.Current.Value.Counter2,
+                                            kecamatanEnumerator.Current.Value.Total);
+
+                                        Console.WriteLine(log);
+                                        s_badDataList.Add(log);                                        
+                                    }
+
                                     // Sum each kabupaten to this province
                                     kabupatenTally.Counter1 += kecamatanEnumerator.Current.Value.Counter1;
                                     kabupatenTally.Counter2 += kecamatanEnumerator.Current.Value.Counter2;
                                     kabupatenTally.Total += kecamatanEnumerator.Current.Value.Total;
+                                }
 
-                                    
+                                if (!kabupatenTally.CheckVoteIntegrity())
+                                {
+                                    // Moves on but logs these data for reporting
+                                    String log = String.Format("Bad data integrity for Kabupaten {0}:{1}, vote1 {2} plus vote2 {3} does not equate to total {4}",
+                                        kecamatanEnumerator.Current.Value.KabupatenCode,
+                                        kecamatanEnumerator.Current.Value.KabupatenName,
+                                        kabupatenTally.Counter1,
+                                        kabupatenTally.Counter2,
+                                        kabupatenTally.Total);
+
+                                    Console.WriteLine(log);
+                                    s_badDataList.Add(log);    
                                 }
 
                                 provinceTally.Counter1 += kabupatenTally.Counter1;
@@ -488,11 +526,24 @@ namespace Pilpres2014
                         swProvince.Write(logPayload);
 
                         firstItems[0] = false;
+          
+                        if (!provinceTally.CheckVoteIntegrity())
+                        {
+                            // Moves on but log for reporting
+                            String log = String.Format("Data for Province {0} is invalid the sum of the vote1 {1} and vote2 {2} does not equate to {3}",
+                                    provinceName,
+                                    provinceTally.Counter1,
+                                    provinceTally.Counter2,
+                                    provinceTally.Total);
+
+                            Console.WriteLine(log);
+                            s_badDataList.Add(log);
+                        }
 
                         // Sum each province to total
                         nationTally.Counter1 += provinceTally.Counter1;
                         nationTally.Counter2 += provinceTally.Counter2;
-                        nationTally.Total += provinceTally.Total;                        
+                        nationTally.Total += provinceTally.Total;
                     }
 
                     swProvince.WriteLine("]");
@@ -505,10 +556,32 @@ namespace Pilpres2014
                         nationTally.Total == 0 ? 0 : ((float)nationTally.Counter2 / nationTally.Total) * 100,
                         nationTally.Total);
 
+                if (!nationTally.CheckVoteIntegrity())
+                {
+                    // Moves on but log for reporting
+                    String log = String.Format("Data for Nation level is invalid the sum of the vote1 {0} and vote2 {1} does not equate to {2}",
+                            nationTally.Counter1,
+                            nationTally.Counter2,
+                            nationTally.Total);
+
+                    Console.WriteLine(log);
+                    s_badDataList.Add(log);
+                }
+
                 Console.WriteLine(logPayload);
                 swtotal.WriteLine(logPayload);
                 swtotal.WriteLine("]");
             }
+
+
+            // Do bad data reportings
+            Console.WriteLine("============================ BAD DATA REPORTING ============================");
+            foreach (String badData in s_badDataList)
+            {
+                Console.WriteLine("> BAD DATA: {0}", badData);
+                s_badDataList.Add(badData);
+            }
+            Console.WriteLine("======================== END OF BAD DATA REPORTING ============================");
         }
 
         static void Main(string[] args)

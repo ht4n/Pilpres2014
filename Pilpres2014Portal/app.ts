@@ -43,6 +43,8 @@ class Pilpres2014 {
     provinceVoteEntries: KnockoutObservableArray<VoteEntry>;
     showProvinceDetails: KnockoutObservable<boolean>;
     toggleProvinceText: KnockoutObservable<string>;
+    showHistoricalData: KnockoutObservable<boolean>;
+    toggleHistoricalText: KnockoutObservable<string>;
     historicalFeeds: KnockoutObservableArray<any>;
     selectedDataFeed: KnockoutObservable<{ datetime: string; }>;
     lastUpdatedTime: KnockoutObservable<string>;
@@ -62,8 +64,9 @@ class Pilpres2014 {
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
         this.showProvinceDetails = ko.observable(false);
+        this.showHistoricalData = ko.observable(false);
 
-        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-";
+        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
         this.lastUpdatedTime = ko.observable("");
@@ -87,13 +90,71 @@ class Pilpres2014 {
 
             this.refresh(this.selectedDataFeed().datetime);
         });
-
+        
+        this.toggleHistoricalText = ko.observable("Show Last 24 hrs");
         this.toggleProvinceText = ko.observable("Show votes by province");
     }
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
         var vm = ko.contextFor(event.currentTarget);
         vm.$root.refresh(data.datetime);
+    }
+
+    toggleHistoricalData() {
+        if (this.showHistoricalData()) {
+            this.showHistoricalData(false);
+            this.toggleHistoricalText("Show last 24 hrs");
+        }
+        else {
+            this.showHistoricalData(true);
+            var self = this;
+            var voteEntries = [];
+            var dataCount = 0;
+            var historicalDataCallback = function (data, status) {
+                console.log("response:" + status);
+                if (status !== "success") {
+                    return;
+                }
+
+                var dataJson = JSON.parse(data);
+
+                // Show max first 12 entries
+                for (var i = 0; i < dataJson.length; ++i) {
+                    var entry: {
+                        PrabowoHattaVotes: string;
+                        JokowiKallaVotes: string;
+                        PrabowoHattaPercentage: string;
+                        JokowiKallaPercentage: string;
+                        Total: string
+                    } = dataJson[i];
+
+                    var context: { "datetime": string; "id": number; } = this;
+                    var voteEntry = new VoteEntry();
+                    voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                    voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
+                    voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
+
+                    voteEntry.totalVotes2(entry.JokowiKallaVotes);
+                    voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
+                    voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
+
+                    voteEntry.total(entry.Total);
+                    voteEntry.label(context.datetime);
+
+                    voteEntries[context.id] = voteEntry;
+                };
+
+                ++dataCount;
+                if (dataCount == 12) {
+                    self.voteEntries(voteEntries);
+                }
+            }
+
+            for (var i = 0; i < 12; ++i) {
+                var value = this.historicalFeeds()[i];
+                this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
+            }
+        }
     }
 
     toggleProvinceDetails() {
@@ -173,7 +234,16 @@ class Pilpres2014 {
             }
 
             var dataJson = JSON.parse(data);
-            dataJson.forEach((entry: { PrabowoHattaVotes: string; JokowiKallaVotes: string; PrabowoHattaPercentage: string; JokowiKallaPercentage: string; Total: string }) => {
+        
+            for (var i = 0; i < dataJson.length; ++i) {
+                var entry: {
+                    PrabowoHattaVotes: string;
+                    JokowiKallaVotes: string;
+                    PrabowoHattaPercentage: string;
+                    JokowiKallaPercentage: string;
+                    Total: string
+                } = dataJson[i];
+
                 var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
@@ -187,26 +257,18 @@ class Pilpres2014 {
                 voteEntry.total(entry.Total);
                 voteEntry.label(context);
 
-                self.voteEntries.push(voteEntry);
-            });
-
-            if (self.voteEntries().length > 0) {
-                var firstEntry = self.voteEntries()[0];
-
-                self.percentageVotes1(firstEntry.percentageVotes1());
-                self.percentageVotes2(firstEntry.percentageVotes2());
-                self.totalVotes1(firstEntry.totalVotes1());
-                self.totalVotes2(firstEntry.totalVotes2());
-                self.totalVotes(firstEntry.total());
-                self.status1("bigScore " + firstEntry.status1());
-                self.status2("bigScore " + firstEntry.status2());
-            }
+                self.percentageVotes1(voteEntry.percentageVotes1());
+                self.percentageVotes2(voteEntry.percentageVotes2());
+                self.totalVotes1(voteEntry.totalVotes1());
+                self.totalVotes2(voteEntry.totalVotes2());
+                self.totalVotes(voteEntry.total());
+                self.status1("bigScore " + voteEntry.status1());
+                self.status2("bigScore " + voteEntry.status2());
+                break;
+            };
         }
 
-        this.historicalFeeds().forEach((value) => {
-            this.query("KPU-Feeds-" + value.datetime + "-total.json", value.datetime, totalCallback);
-        });
-
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + "-total.json", this.lastUpdatedTime(), totalCallback);
     }
 
     query(url, context?, callback?, statusCallback?) {

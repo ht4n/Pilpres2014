@@ -33,8 +33,9 @@ var Pilpres2014 = (function () {
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
         this.showProvinceDetails = ko.observable(false);
+        this.showHistoricalData = ko.observable(false);
 
-        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014/blob/master/KPU-Feeds-";
+        this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
         this.lastUpdatedTime = ko.observable("");
@@ -59,11 +60,62 @@ var Pilpres2014 = (function () {
             _this.refresh(_this.selectedDataFeed().datetime);
         });
 
+        this.toggleHistoricalText = ko.observable("Show Last 24 hrs");
         this.toggleProvinceText = ko.observable("Show votes by province");
     }
     Pilpres2014.prototype.updateVoteByDate = function (data, event) {
         var vm = ko.contextFor(event.currentTarget);
         vm.$root.refresh(data.datetime);
+    };
+
+    Pilpres2014.prototype.toggleHistoricalData = function () {
+        if (this.showHistoricalData()) {
+            this.showHistoricalData(false);
+            this.toggleHistoricalText("Show last 24 hrs");
+        } else {
+            this.showHistoricalData(true);
+            var self = this;
+            var voteEntries = [];
+            var dataCount = 0;
+            var historicalDataCallback = function (data, status) {
+                console.log("response:" + status);
+                if (status !== "success") {
+                    return;
+                }
+
+                var dataJson = JSON.parse(data);
+
+                for (var i = 0; i < dataJson.length; ++i) {
+                    var entry = dataJson[i];
+
+                    var context = this;
+                    var voteEntry = new VoteEntry();
+                    voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                    voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
+                    voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
+
+                    voteEntry.totalVotes2(entry.JokowiKallaVotes);
+                    voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
+                    voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
+
+                    voteEntry.total(entry.Total);
+                    voteEntry.label(context.datetime);
+
+                    voteEntries[context.id] = voteEntry;
+                }
+                ;
+
+                ++dataCount;
+                if (dataCount == 12) {
+                    self.voteEntries(voteEntries);
+                }
+            };
+
+            for (var i = 0; i < 12; ++i) {
+                var value = this.historicalFeeds()[i];
+                this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
+            }
+        }
     };
 
     Pilpres2014.prototype.toggleProvinceDetails = function () {
@@ -136,20 +188,21 @@ var Pilpres2014 = (function () {
     };
 
     Pilpres2014.prototype.refresh = function (datetime) {
-        var _this = this;
         var self = this;
         self.voteEntries.removeAll();
 
         var totalCallback = function (data, status) {
-            var _this = this;
             console.log("response:" + status);
             if (status !== "success") {
                 return;
             }
 
             var dataJson = JSON.parse(data);
-            dataJson.forEach(function (entry) {
-                var context = _this;
+
+            for (var i = 0; i < dataJson.length; ++i) {
+                var entry = dataJson[i];
+
+                var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                 voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
@@ -162,25 +215,19 @@ var Pilpres2014 = (function () {
                 voteEntry.total(entry.Total);
                 voteEntry.label(context);
 
-                self.voteEntries.push(voteEntry);
-            });
-
-            if (self.voteEntries().length > 0) {
-                var firstEntry = self.voteEntries()[0];
-
-                self.percentageVotes1(firstEntry.percentageVotes1());
-                self.percentageVotes2(firstEntry.percentageVotes2());
-                self.totalVotes1(firstEntry.totalVotes1());
-                self.totalVotes2(firstEntry.totalVotes2());
-                self.totalVotes(firstEntry.total());
-                self.status1("bigScore " + firstEntry.status1());
-                self.status2("bigScore " + firstEntry.status2());
+                self.percentageVotes1(voteEntry.percentageVotes1());
+                self.percentageVotes2(voteEntry.percentageVotes2());
+                self.totalVotes1(voteEntry.totalVotes1());
+                self.totalVotes2(voteEntry.totalVotes2());
+                self.totalVotes(voteEntry.total());
+                self.status1("bigScore " + voteEntry.status1());
+                self.status2("bigScore " + voteEntry.status2());
+                break;
             }
+            ;
         };
 
-        this.historicalFeeds().forEach(function (value) {
-            _this.query("KPU-Feeds-" + value.datetime + "-total.json", value.datetime, totalCallback);
-        });
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + "-total.json", this.lastUpdatedTime(), totalCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {
