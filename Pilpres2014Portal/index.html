@@ -55,7 +55,24 @@
         </tbody>
     </table>
     <hr />
-    <div class="section">Last 24 Hours:</div>
+    <!-- FB-like and Twitter tweets -->
+    <table align="center">
+        <tr>
+            <td>
+                <div class="fb-like" data-href="http://www.pilpres2014.org" data-layout="button_count" data-action="recommend" data-show-faces="true" data-share="true"></div>
+            </td>
+            <td>
+                <a href="https://twitter.com/share" class="twitter-share-button" data-via="HonestDemocracy" data-hashtags="Pilpres2014">Tweet</a>
+                <script>!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } }(document, 'script', 'twitter-wjs');</script>
+            </td>
+            <td>
+                <a href="https://twitter.com/honestdemocracy" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow @HonestDemocracy</a>
+                <script>!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = "//platform.twitter.com/widgets.js"; fjs.parentNode.insertBefore(js, fjs); } }(document, "script", "twitter-wjs");</script>
+            </td>
+        </tr>
+    </table>
+    <hr />
+    <div class="section">Last 72 Hours:</div>
     <a href="#" data-bind="click:toggleHistoricalData,text:toggleHistoricalText"></a>
     <hr />
     <!-- ko if:showHistoricalData -->
@@ -76,24 +93,7 @@
     </table>
     <!-- /ko -->
     <hr/>
-    <!-- FB-like and Twitter tweets -->
-    <table align="center">
-        <tr>
-            <td>
-                <div class="fb-like" data-href="http://www.pilpres2014.org" data-layout="button_count" data-action="recommend" data-show-faces="true" data-share="true"></div>
-            </td>
-            <td>
-                <a href="https://twitter.com/share" class="twitter-share-button" data-via="HonestDemocracy" data-hashtags="Pilpres2014">Tweet</a>
-                <script>!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } }(document, 'script', 'twitter-wjs');</script>
-            </td>
-            <td>
-                <a href="https://twitter.com/honestdemocracy" class="twitter-follow-button" data-show-count="false" data-lang="en">Follow @HonestDemocracy</a>
-                <script>!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = "//platform.twitter.com/widgets.js"; fjs.parentNode.insertBefore(js, fjs); } }(document, "script", "twitter-wjs");</script>
-            </td>
-        </tr>
-    </table>
-    <hr />    
-    <div class="section">Data Visualization:</div>
+    <div class="section">Data Visualization:</div>    
     <a class="caption" href="bubleviz.html">Dynamic Pack</a>
     |
     <a class="caption" href="packhierarchy.html">Blue Pack</a>
@@ -107,9 +107,9 @@
     <a class="caption" href="deepbarhierarchy.html">MidLevel iHBar (Kabupaten)</a>
     |
     <a class="caption" href="deepbarhierarchy.html">Deep iHBar (Warning:2MBytes)</a>
-    <hr/>        
+    <hr/>
     <div class="section">Provincial Votes:</div>
-    <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText">Show Details</a>
+    <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText"></a>
     <hr />
     <!-- ko if:showProvinceDetails -->
     <table>

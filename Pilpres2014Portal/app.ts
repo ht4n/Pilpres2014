@@ -85,8 +85,8 @@ class Pilpres2014 {
             this.refresh(this.selectedDataFeed().datetime);
         });
         
-        this.toggleHistoricalText = ko.observable("Show Last 24 hrs");
-        this.toggleProvinceText = ko.observable("Show votes by province");
+        this.toggleHistoricalText = ko.observable("Expand");
+        this.toggleProvinceText = ko.observable("Expand");
     }
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
@@ -97,13 +97,16 @@ class Pilpres2014 {
     toggleHistoricalData() {
         if (this.showHistoricalData()) {
             this.showHistoricalData(false);
-            this.toggleHistoricalText("Show last 24 hrs");
+            this.toggleHistoricalText("Expand");
         }
         else {
             this.showHistoricalData(true);
+            this.toggleHistoricalText("Collapse");
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
+            var maxHistoricalEntries = Math.min(36, this.historicalFeeds().length);
+
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
                 if (status !== "success") {
@@ -139,12 +142,12 @@ class Pilpres2014 {
                 };
 
                 ++dataCount;
-                if (dataCount == 12) {
+                if (dataCount == maxHistoricalEntries) {
                     self.voteEntries(voteEntries);
                 }
             }
 
-            for (var i = 0; i < 12; ++i) {
+            for (var i = 0; i < maxHistoricalEntries; ++i) {
                 var value = this.historicalFeeds()[i];
                 this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
             }
@@ -154,11 +157,11 @@ class Pilpres2014 {
     toggleProvinceDetails() {
         if (this.showProvinceDetails()) {
             this.showProvinceDetails(false);
-            this.toggleProvinceText("Show votes by province");
+            this.toggleProvinceText("Expand");
         }
         else {
             this.showProvinceDetails(true);
-            this.toggleProvinceText("Hide votes by province");
+            this.toggleProvinceText("Collapse");
 
             var self = this;
             var provinceCallback = function (data, status) {
