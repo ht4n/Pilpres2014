@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -44,26 +44,17 @@ namespace FeedsMetadataGenerator
             {
                 IEnumerable<String> files = Directory.EnumerateFiles(rootDir, "*-total.json");
                 SortedSet<DateTime> dateSorter = new SortedSet<DateTime>(new DescendedDateComparer());
-
+                CultureInfo provider = CultureInfo.InvariantCulture;
                 foreach (String file in files)
                 {
-                    Regex rgx = new Regex("KPU-Feeds-(?<YEAR>\\d+)-(?<MONTH>\\d+)-(?<DAY>\\d+)-(?<HOUR>\\d+)-(?<AMPM>\\w+)-total.json");
+                    Regex rgx = new Regex("KPU-Feeds-(?<DATETIME>\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\w{2})-total.json");
                     Match dtmatch = rgx.Match(file);
                     if (!dtmatch.Success)
                     {
                         throw new InvalidDataException("Invalid filename. Expecting 'KPU-Feeds-YYYY-MM-DD-HH-AMPM-total.json");
                     }
 
-                    int hour = dtmatch.Groups["AMPM"].Value == "AM" ? int.Parse(dtmatch.Groups["HOUR"].Value) : ((int.Parse(dtmatch.Groups["HOUR"].Value) + 12) % 24);
-                    
-                    DateTime dt = new DateTime(
-                        int.Parse(dtmatch.Groups["YEAR"].Value),
-                        int.Parse(dtmatch.Groups["MONTH"].Value),
-                        int.Parse(dtmatch.Groups["DAY"].Value),
-                        hour,
-                        0,
-                        0);
-
+                    DateTime dt = DateTime.ParseExact(dtmatch.Groups["DATETIME"].Value, "yyyy-MM-dd-hh-tt", provider);                    
                     dateSorter.Add(dt);
                 }
 
