@@ -2,6 +2,9 @@
 ///<reference path="Scripts/typings/knockout/knockout.d.ts"/>
 
 class VoteEntry {
+    totalVotes1Raw: KnockoutObservable<number>;
+    totalVotes2Raw: KnockoutObservable<number>;
+    totalVotesRaw: KnockoutObservable<number>;
     totalVotes1: KnockoutObservable<string>;
     percentageVotes1: KnockoutObservable<string>;
     totalVotes2: KnockoutObservable<string>;
@@ -12,6 +15,9 @@ class VoteEntry {
     status2: KnockoutObservable<string>;
 
     constructor() {
+        this.totalVotes1Raw = ko.observable(0);
+        this.totalVotes2Raw = ko.observable(0);
+        this.totalVotesRaw = ko.observable(0);
         this.totalVotes1 = ko.observable("");
         this.percentageVotes1 = ko.observable("");
         this.totalVotes2 = ko.observable("");
@@ -110,11 +116,15 @@ class Pilpres2014 {
                 self.provinceVoteEntries.removeAll();
                 dataJson.forEach((entry) => {
                     var voteEntry = new VoteEntry();
-                    voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                    voteEntry.totalVotes1Raw(parseInt(entry.PrabowoHattaVotes));
+                    voteEntry.totalVotes2Raw(parseInt(entry.JokowiKallaVotes));
+                    voteEntry.totalVotesRaw(parseInt(entry.Total));
+
+                    voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                     voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
-                    voteEntry.totalVotes2(entry.PrabowoHattaVotes);
+                    voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
                     voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
-                    voteEntry.total(entry.Total);
+                    voteEntry.total(parseInt(entry.Total).toLocaleString());
                     voteEntry.label(entry.Province);
 
                     self.provinceVoteEntries.push(voteEntry);
@@ -122,6 +132,33 @@ class Pilpres2014 {
             }
 
             this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + "-province.json", null, provinceCallback);
+        }
+    }
+
+    sortProvinceData(field: number) {
+        var self = this;
+        switch (field) {
+            case 1: self.provinceVoteEntries.sort(function (a: VoteEntry, b: VoteEntry) {
+                        return parseFloat(a.percentageVotes1()) - parseFloat(b.percentageVotes1());
+                    });
+                    break;
+            case 2: self.provinceVoteEntries.sort(function (a: VoteEntry, b: VoteEntry) {
+                        return parseFloat(a.percentageVotes2()) - parseFloat(b.percentageVotes2());
+                    });
+                break;
+            case 3: self.provinceVoteEntries.sort(function (a: VoteEntry, b: VoteEntry) {
+                        return a.totalVotes1Raw() - b.totalVotes1Raw();
+                    });
+                break;
+            case 4: self.provinceVoteEntries.sort(function (a: VoteEntry, b: VoteEntry) {
+                        return a.totalVotes2Raw() - b.totalVotes2Raw();
+                    });
+                break;
+            case 5: self.provinceVoteEntries.sort(function (a: VoteEntry, b: VoteEntry) {
+                        return a.totalVotesRaw() - b.totalVotesRaw();
+                    });
+                break;
+
         }
     }
 
@@ -188,7 +225,9 @@ class Pilpres2014 {
     }
 }
 
+var pilpres2014ViewModel; 
+
 window.onload = () => {
-    var pilpres2014ViewModel = new Pilpres2014();
+    pilpres2014ViewModel = new Pilpres2014();
     ko.applyBindings(pilpres2014ViewModel);
 };
