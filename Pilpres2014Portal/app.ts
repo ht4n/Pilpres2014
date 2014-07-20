@@ -82,7 +82,7 @@ class Pilpres2014 {
             this.selectedDataFeed(currentFeedItem);
             this.lastUpdatedTime(this.selectedDataFeed().datetime);
 
-            this.refresh(this.selectedDataFeed().datetime);
+            this.refreshMainTicker(this.selectedDataFeed().datetime);
         });
         
         this.toggleHistoricalText = ko.observable("Expand");
@@ -91,7 +91,7 @@ class Pilpres2014 {
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
         var vm = ko.contextFor(event.currentTarget);
-        vm.$root.refresh(data.datetime);
+        vm.$root.refreshMainTicker(data.datetime);
     }
 
     toggleHistoricalData() {
@@ -127,11 +127,11 @@ class Pilpres2014 {
 
                     var context: { "datetime": string; "id": number; } = this;
                     var voteEntry = new VoteEntry();
-                    voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                    voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                     voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
                     voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
-                    voteEntry.totalVotes2(entry.JokowiKallaVotes);
+                    voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
                     voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
                     voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
@@ -189,7 +189,7 @@ class Pilpres2014 {
         }
     }
 
-    refresh(datetime: string) {
+    refreshMainTicker(datetime: string) {
         var self = this;
         self.voteEntries.removeAll();
         
@@ -212,11 +212,11 @@ class Pilpres2014 {
 
                 var context = this;
                 var voteEntry = new VoteEntry();
-                voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                 voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
                 voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
-                voteEntry.totalVotes2(entry.JokowiKallaVotes);
+                voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
                 voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
                 voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
