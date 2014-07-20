@@ -90,3 +90,7 @@ a {
     padding-top:2px;
     padding-bottom:2px;
 }
+
+iframe {
+    width:100%;
+}

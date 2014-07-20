@@ -17,6 +17,7 @@
     <IISExpressUseClassicPipelineMode />
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="AboutUs.html" />
     <Content Include="app.css" />
     <Content Include="barhierarchy.html" />
     <Content Include="bublevisstatic.html" />

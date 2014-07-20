@@ -88,28 +88,31 @@ class Pilpres2014 {
             this.selectedDataFeed(currentFeedItem);
             this.lastUpdatedTime(this.selectedDataFeed().datetime);
 
-            this.refresh(this.selectedDataFeed().datetime);
+            this.refreshMainTicker(this.selectedDataFeed().datetime);
         });
         
-        this.toggleHistoricalText = ko.observable("Show Last 24 hrs");
-        this.toggleProvinceText = ko.observable("Show votes by province");
+        this.toggleHistoricalText = ko.observable("Expand");
+        this.toggleProvinceText = ko.observable("Expand");
     }
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
         var vm = ko.contextFor(event.currentTarget);
-        vm.$root.refresh(data.datetime);
+        vm.$root.refreshMainTicker(data.datetime);
     }
 
     toggleHistoricalData() {
         if (this.showHistoricalData()) {
             this.showHistoricalData(false);
-            this.toggleHistoricalText("Show last 24 hrs");
+            this.toggleHistoricalText("Expand");
         }
         else {
             this.showHistoricalData(true);
+            this.toggleHistoricalText("Collapse");
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
+            var maxHistoricalEntries = Math.min(36, this.historicalFeeds().length);
+
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
                 if (status !== "success") {
@@ -130,11 +133,11 @@ class Pilpres2014 {
 
                     var context: { "datetime": string; "id": number; } = this;
                     var voteEntry = new VoteEntry();
-                    voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                    voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                     voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
                     voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
-                    voteEntry.totalVotes2(entry.JokowiKallaVotes);
+                    voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
                     voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
                     voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
@@ -145,12 +148,12 @@ class Pilpres2014 {
                 };
 
                 ++dataCount;
-                if (dataCount == 12) {
+                if (dataCount == maxHistoricalEntries) {
                     self.voteEntries(voteEntries);
                 }
             }
 
-            for (var i = 0; i < 12; ++i) {
+            for (var i = 0; i < maxHistoricalEntries; ++i) {
                 var value = this.historicalFeeds()[i];
                 this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
             }
@@ -160,11 +163,11 @@ class Pilpres2014 {
     toggleProvinceDetails() {
         if (this.showProvinceDetails()) {
             this.showProvinceDetails(false);
-            this.toggleProvinceText("Show votes by province");
+            this.toggleProvinceText("Expand");
         }
         else {
             this.showProvinceDetails(true);
-            this.toggleProvinceText("Hide votes by province");
+            this.toggleProvinceText("Collapse");
 
             var self = this;
             var provinceCallback = function (data, status) {
@@ -223,7 +226,7 @@ class Pilpres2014 {
         }
     }
 
-    refresh(datetime: string) {
+    refreshMainTicker(datetime: string) {
         var self = this;
         self.voteEntries.removeAll();
         
