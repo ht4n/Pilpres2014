@@ -23,9 +23,20 @@
     }(document, 'script', 'facebook-jssdk'));
     </script>
 
-    <div class="pageTitle">Pilpres 2014 - DA1 Count</div>
+    <div class="pageTitle">Pilpres 2014 - Real Count</div>
     <hr/>    
-    <div><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
+    <div>
+        <a href="AboutUs.html"><span class="sectionLink">About us</span></a>        
+        |
+        <a href="Images/pilpres2014_architecture.png"><span class="sectionLink">Architecture</span></a>
+            (
+            <a href="Images/pilpres2014_architecture.png"><span class="sectionLink">png</span></a>
+            |
+            <a href="Resources/pilpres2014_architecture.pdf"><span class="sectionLink">pdf</span></a>
+            )
+    </div>
+    <hr/>
+    <span class="caption">Rekap Level:</span><select data-bind="options:rekapLevels,value:selectedRekapLevel"></select>
     <table class="scoreTable">
         <thead>
             <tr>
@@ -54,7 +65,8 @@
             </tr>
         </tbody>
     </table>
-    <hr />
+    <div style="text-align:right"><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
+    <hr />    
     <!-- FB-like and Twitter tweets -->
     <table align="center">
         <tr>
@@ -112,9 +124,10 @@
     <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText"></a>
     <hr />
     <!-- ko if:showProvinceDetails -->
+    <span class="caption">(Click table header to sort)</span>
     <table class="provinceTable">
         <thead>
-            <tr>
+            <tr class="tableHeader">
                 <th>Province</th>
 				<th onclick="pilpres2014ViewModel.sortProvinceData(1);" >Prabowo-Hatta<br />(%)</th>
 				<th onclick="pilpres2014ViewModel.sortProvinceData(2);">Jokowi-Kalla<br />(%)</th>
@@ -150,7 +163,6 @@
     <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten.json'}">kabupaten</a>
     <!-- /ko -->
 
-    <hr />
-    <a href="AboutUs.html">about us</a>
+    <hr />    
 </body>
 </html>

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.IO;
+using System.Globalization;
 
 /*
 {
@@ -46,6 +47,17 @@ namespace VisualizeEverything
      #HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,KecamatanCode,KecamatanName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes
      1,ACEH,2,ACEH SELATAN,236,LABUHAN HAJI TIMUR,0,0,0
     */
+    class DescendedDateComparer : IComparer<DateTime>
+    {
+        public int Compare(DateTime x, DateTime y)
+        {
+            // use the default comparer to do the original comparison for datetimes
+            int ascendingResult = Comparer<DateTime>.Default.Compare(x, y);
+
+            // turn the result around
+            return 0 - ascendingResult;
+        }
+    }
 
     class Program
     {
@@ -244,15 +256,42 @@ namespace VisualizeEverything
             }            
         }
 
+        static String GetLatestTimestampFile(String rootDir)
+        {
+            IEnumerable<String> files = Directory.EnumerateFiles(rootDir, "*.csv");
+            SortedSet<DateTime> dateSorter = new SortedSet<DateTime>(new DescendedDateComparer());
+            CultureInfo provider = CultureInfo.InvariantCulture;
+            foreach (String file in files)
+            {
+                Regex rgx = new Regex("KPU-Feeds-(?<DATETIME>\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\w{2}).csv");
+                Match dtmatch = rgx.Match(file);
+                if (!dtmatch.Success)
+                {
+                    continue;
+                }
+
+                DateTime dt = DateTime.ParseExact(dtmatch.Groups["DATETIME"].Value, "yyyy-MM-dd-hh-tt", provider);
+                dateSorter.Add(dt);
+            }
+
+            foreach (DateTime dt in dateSorter)
+            {
+                return String.Format("KPU-Feeds-{0}.csv", dt.ToString("yyyy-MM-dd-hh-tt"));
+            }
+
+            throw new InvalidDataException("Cannot found any valid file to process");
+        }
+
         static void Main(string[] args)
         {
             if (args.Length != 3)
             {
-                Console.WriteLine("Syntax: VisualizeEverything.exe <input> <output> <filter:Province|Kabupaten|Kecamatan>");
+                Console.WriteLine("Syntax: VisualizeEverything.exe <root> <output> <filter:Province|Kabupaten|Kecamatan>");
                 return;
             }
 
-            String inputCsv = args[0];
+            String root = args[0];
+            String inputCsv = Path.Combine(root, GetLatestTimestampFile(root));
             String output = args[1];
             maxDepth = args[2];
             using (StreamWriter sw = new StreamWriter(output))

@@ -63,7 +63,7 @@ namespace Pilpres2014
         }
     }
     
-    public class HierarchicalTally : BinaryTally
+    public class HierarchicalTallyDa1 : BinaryTally
     {
         public ThreeLevelDictionary votingTable = new ThreeLevelDictionary();
         public ThreeLevelDictionary VotingTable { get { return this.votingTable; } }
@@ -95,12 +95,65 @@ namespace Pilpres2014
         }
     }
 
+    public class HierarchicalTallyDb1 : BinaryTally
+    {
+        public TwoLevelDictionary votingTable = new TwoLevelDictionary();
+        public TwoLevelDictionary VotingTable { get { return this.votingTable; } }
+
+        public void Add(BinaryTally tally, String provinceCode, String kabupatenCode)
+        {
+            lock (this.votingTable)
+            {
+                base.Counter1 += tally.Counter1;
+                base.Counter2 += tally.Counter2;
+                base.Total += tally.Counter1 + tally.Counter2;
+
+                Dictionary<String, BinaryTally> kabupatenDictionary;
+                if (!this.votingTable.TryGetValue(provinceCode, out kabupatenDictionary))
+                {
+                    kabupatenDictionary = new Dictionary<String, BinaryTally>();
+                    this.votingTable.Add(provinceCode, kabupatenDictionary);
+                }
+                
+                kabupatenDictionary.Add(kabupatenCode, tally);
+            }
+        }
+    }
+
+    public class HierarchicalTallyDc1 : BinaryTally
+    {
+        public Dictionary<String, BinaryTally> votingTable = new Dictionary<String, BinaryTally>();
+        public Dictionary<String, BinaryTally> VotingTable { get { return this.votingTable; } }
+
+        public void Add(BinaryTally tally, String provinceCode)
+        {
+            lock (this.votingTable)
+            {
+                base.Counter1 += tally.Counter1;
+                base.Counter2 += tally.Counter2;
+                base.Total += tally.Counter1 + tally.Counter2;
+                
+                if (!this.votingTable.ContainsKey(provinceCode))
+                {
+                    this.votingTable.Add(provinceCode, tally);
+                }
+                else
+                {
+                    throw new InvalidDataException(String.Format("Duplicate key {0} found", provinceCode));
+                }
+            }
+        }
+    }
+
     public class VoteCounter
     {
         static readonly int s_retryCount = 5;
         static UInt64 s_invalidVoteCount = 0;
         static UInt64 s_validVoteCount = 0;
-        static HierarchicalTally s_tallyTable = new HierarchicalTally();
+        static HierarchicalTallyDa1 s_tallyTableDa1 = new HierarchicalTallyDa1();
+        static HierarchicalTallyDb1 s_tallyTableDb1 = new HierarchicalTallyDb1();
+        static HierarchicalTallyDc1 s_tallyTableDc1 = new HierarchicalTallyDc1();
+
         static int s_outstandingWorkItems = -1;
         static int s_threadCount = 4;
         static ManualResetEvent[] s_events;
@@ -169,7 +222,7 @@ namespace Pilpres2014
             tally.Total = (tally.Counter1 + tally.Counter2);
         }
 
-        static BinaryTally CountVotes(
+        static BinaryTally CountVotesDa1(
             String provinceCode,
             String provinceName, 
             String kabupatenCode,
@@ -214,8 +267,88 @@ namespace Pilpres2014
                        
             return null;
         }
+
+        static BinaryTally CountVotesDb1(
+            String provinceCode,
+            String provinceName,
+            String kabupatenCode,
+            String kabupatenName)
+        {
+            String baseUrl = "http://pilpres2014.kpu.go.id/db1.php?cmd=select&grandparent={0}&parent={1}";
+
+            StringBuilder sb = new StringBuilder();
+
+            String url = String.Format(baseUrl, provinceCode, kabupatenCode);
+            for (int i = 0; i < s_retryCount; ++i)
+            {
+                try
+                {
+                    // NOTES: this can be better performance if we use the WebClient pool
+                    // but given that we do not need a super high throughput we can backtrack
+                    // to a conventional method of instantiating WebClient each time
+                    WebClient client = new WebClient();
+                    sb.Append(client.DownloadString(url));
+
+                    BinaryTally tally = new BinaryTally();
+                    ParseVoteCount(sb.ToString(), tally);
+                    tally.ProvinceCode = provinceCode;
+                    tally.ProvinceName = provinceName;
+                    tally.KabupatenCode = kabupatenCode;
+                    tally.KabupatenName = kabupatenName;
+
+                    return tally;
+                }
+                catch (WebException ex)
+                {
+                    Console.WriteLine("> Failed to fetch a page from {0}", url);
+                    Console.WriteLine(ex);
+                    Console.WriteLine("> Retry {0}", i);
+                    Thread.Sleep(10000);
+                }
+            }
+
+            return null;
+        }
+
+        static BinaryTally CountVotesDc1(
+            String provinceCode,
+            String provinceName)
+        {
+            String baseUrl = "http://pilpres2014.kpu.go.id/dc1.php?cmd=select&grandparent=0&parent={0}";
+
+            StringBuilder sb = new StringBuilder();
+
+            String url = String.Format(baseUrl, provinceCode);
+            for (int i = 0; i < s_retryCount; ++i)
+            {
+                try
+                {
+                    // NOTES: this can be better performance if we use the WebClient pool
+                    // but given that we do not need a super high throughput we can backtrack
+                    // to a conventional method of instantiating WebClient each time
+                    WebClient client = new WebClient();
+                    sb.Append(client.DownloadString(url));
+
+                    BinaryTally tally = new BinaryTally();
+                    ParseVoteCount(sb.ToString(), tally);
+                    tally.ProvinceCode = provinceCode;
+                    tally.ProvinceName = provinceName;
+                    
+                    return tally;
+                }
+                catch (WebException ex)
+                {
+                    Console.WriteLine("> Failed to fetch a page from {0}", url);
+                    Console.WriteLine(ex);
+                    Console.WriteLine("> Retry {0}", i);
+                    Thread.Sleep(10000);
+                }
+            }
+
+            return null;
+        }
         
-        static void CountVotesHelper(
+        static void CountVotesHelperDa1(
             String level, 
             ref String rprovinceName,
             ref String rprovinceCode,
@@ -270,7 +403,7 @@ namespace Pilpres2014
                         // Let it sleep a bit before becoming active ...
                         Thread.Sleep(new Random().Next(5000));
 
-                        BinaryTally tally = CountVotes(
+                        BinaryTally tally = CountVotesDa1(
                             provinceCode,
                             provinceName,
                             kabupatenCode,
@@ -288,7 +421,7 @@ namespace Pilpres2014
                         }
                         else
                         {
-                            s_tallyTable.Add(tally, provinceCode, kabupatenCode, areaCode);
+                            s_tallyTableDa1.Add(tally, provinceCode, kabupatenCode, areaCode);
                         }
 
                         Console.WriteLine("{0},{1},{2},{3},{4},{5},{6},{7},{8}",
@@ -322,7 +455,157 @@ namespace Pilpres2014
             }
         }
 
-        static void CountVotes(String districtTableFile, String outputFile, int threadCount)
+        static void CountVotesHelperDb1(
+           String level,
+           ref String rprovinceName,
+           ref String rprovinceCode,
+           string levelCategory,
+           string areaCode,
+           string areaName,
+           StreamWriter sw)
+        {
+            String provinceName = rprovinceName;
+            String provinceCode = rprovinceCode;
+            
+            // Roll tally at Province level
+            if (level == "0")
+            {
+                rprovinceCode = areaCode;
+                rprovinceName = areaName;
+            }
+
+            // Roll tally at Kabupaten level
+            if (level == "1")
+            {
+                String kabupatenCode = areaCode;
+                String kabupatenName = areaName;
+            
+                Interlocked.Increment(ref s_outstandingWorkItems);
+
+                // Spin untils the number of outstanding work is less than max thread count
+                SpinWait.SpinUntil(() => { return (s_outstandingWorkItems < s_threadCount); });
+
+                {
+                    WaitCallback callback = (Object threadContext) =>
+                    {
+                        Console.WriteLine("[ProcessingThreadStart:{0},{1},{2},{3}]",
+                            provinceCode,
+                            provinceName,
+                            kabupatenCode,
+                            kabupatenName);
+
+                        // Let it sleep a bit before becoming active ...
+                        Thread.Sleep(new Random().Next(5000));
+
+                        BinaryTally tally = CountVotesDb1(
+                            provinceCode,
+                            provinceName,
+                            kabupatenCode,
+                            kabupatenName);
+
+                        if (tally == null)
+                        {
+                            Console.WriteLine("Tally cannot be obtained for {0} {1} {2} {3}",
+                                provinceCode,
+                                kabupatenCode);
+                        }
+                        else
+                        {
+                            s_tallyTableDb1.Add(tally, provinceCode, kabupatenCode);
+                        }
+
+                        Console.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
+                                provinceCode,
+                                provinceName,
+                                kabupatenCode,
+                                kabupatenName,
+                                tally.Counter1,
+                                tally.Counter2,
+                                tally.Total);
+
+                        sw.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
+                                provinceCode,
+                                provinceName,
+                                kabupatenCode,
+                                kabupatenName,
+                                tally.Counter1,
+                                tally.Counter2,
+                                tally.Total);
+
+                        // Sets completion signal for event tid
+                        Interlocked.Decrement(ref s_outstandingWorkItems);
+                    };
+
+                    ThreadPool.QueueUserWorkItem(callback);
+                }
+            }
+        }
+
+        static void CountVotesHelperDc1(
+          String level,
+          string levelCategory,
+          string areaCode,
+          string areaName,
+          StreamWriter sw)
+        {            
+            // Roll tally at Province level
+            if (level == "0")
+            {
+                String provinceCode = areaCode;
+                String provinceName = areaName;
+         
+                Interlocked.Increment(ref s_outstandingWorkItems);
+
+                // Spin untils the number of outstanding work is less than max thread count
+                SpinWait.SpinUntil(() => { return (s_outstandingWorkItems < s_threadCount); });
+
+                {
+                    WaitCallback callback = (Object threadContext) =>
+                    {
+                        Console.WriteLine("[ProcessingThreadStart:{0},{1}]",
+                            provinceCode,
+                            provinceName);
+
+                        // Let it sleep a bit before becoming active ...
+                        Thread.Sleep(new Random().Next(5000));
+
+                        BinaryTally tally = CountVotesDc1(
+                            provinceCode,
+                            provinceName);
+
+                        if (tally == null)
+                        {
+                            Console.WriteLine("Tally cannot be obtained for {0}", provinceCode);
+                        }
+                        else
+                        {
+                            s_tallyTableDc1.Add(tally, provinceCode);
+                        }
+
+                        Console.WriteLine("{0},{1},{2},{3},{4}",
+                                provinceCode,
+                                provinceName,
+                                tally.Counter1,
+                                tally.Counter2,
+                                tally.Total);
+
+                        sw.WriteLine("{0},{1},{2},{3},{4}",
+                                provinceCode,
+                                provinceName,
+                                tally.Counter1,
+                                tally.Counter2,
+                                tally.Total);
+
+                        // Sets completion signal for event tid
+                        Interlocked.Decrement(ref s_outstandingWorkItems);
+                    };
+
+                    ThreadPool.QueueUserWorkItem(callback);
+                }
+            }
+        }
+
+        static void CountVotesDa1(String districtTableFile, String outputFile, int threadCount)
         {
             s_threadCount = threadCount;
             s_threadIds = new int[s_threadCount];
@@ -344,7 +627,7 @@ namespace Pilpres2014
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
-            String tmpOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".tmp");
+            String tmpOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".dba1.tmp");
             using (StreamWriter sw = new StreamWriter(tmpOutputFile))
             {
                 sw.AutoFlush = true;
@@ -370,7 +653,7 @@ namespace Pilpres2014
                             continue;
                         }
 
-                        CountVotesHelper(
+                        CountVotesHelperDa1(
                             tokens[0],
                             ref provinceCode,
                             ref provinceName,
@@ -391,10 +674,141 @@ namespace Pilpres2014
                 }
             }
 
-            GenerateSummary(outputFile);
+            GenerateSummaryDa1(outputFile);
         }
 
-        static void GenerateSummary(String outputFile)
+        static void CountVotesDb1(String districtTableFile, String outputFile, int threadCount)
+        {
+            s_threadCount = threadCount;
+            s_threadIds = new int[s_threadCount];
+            for (int i = 0; i < s_threadCount; ++i)
+            {
+                s_threadIds[i] = i;
+            }
+
+            s_events = new ManualResetEvent[s_threadCount];
+            for (int i = 0; i < s_threadCount; ++i)
+            {
+                s_events[i] = new ManualResetEvent(false);
+            }
+
+            String provinceCode = "";
+            String provinceName = "";
+
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            String tmpOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".db1.tmp");
+            using (StreamWriter sw = new StreamWriter(tmpOutputFile))
+            {
+                sw.AutoFlush = true;
+                sw.WriteLine("#HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
+
+                // Assumptions:
+                // The table is sorted by columns from left-to-right
+                using (StreamReader sr = new StreamReader(districtTableFile))
+                {
+                    string line = sr.ReadLine();
+                    while (!sr.EndOfStream && !string.IsNullOrWhiteSpace(line) && s_itemCount++ < s_maxItems)
+                    {
+                        if (line.StartsWith("#"))
+                        {
+                            line = sr.ReadLine();
+                            continue;
+                        }
+
+                        String[] tokens = line.Split(',');
+                        if (tokens.Length != 4)
+                        {
+                            Console.WriteLine("> !!Invalid input with more than 4 columns!: {0}", line);
+                            continue;
+                        }
+
+                        CountVotesHelperDb1(
+                            tokens[0],
+                            ref provinceCode,
+                            ref provinceName,
+                            tokens[1],
+                            tokens[2],
+                            tokens[3],
+                            sw);
+
+                        line = sr.ReadLine();
+                    }
+
+                    timer.Stop();
+                    Console.WriteLine("> Crawler has finished iterating all provinces/kabupatens/kecamatans in {0} minutes", timer.Elapsed.Minutes);
+                    Console.WriteLine("> Waiting until all outstanding worker threads completed their jobs ... (timeout in 30 secs)");
+                    SpinWait.SpinUntil(() => { return s_outstandingWorkItems == -1; }, 10000);
+                }
+            }
+
+            GenerateSummaryDb1(outputFile);
+        }
+
+        static void CountVotesDc1(String districtTableFile, String outputFile, int threadCount)
+        {
+            s_threadCount = threadCount;
+            s_threadIds = new int[s_threadCount];
+            for (int i = 0; i < s_threadCount; ++i)
+            {
+                s_threadIds[i] = i;
+            }
+
+            s_events = new ManualResetEvent[s_threadCount];
+            for (int i = 0; i < s_threadCount; ++i)
+            {
+                s_events[i] = new ManualResetEvent(false);
+            }
+
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+            String tmpOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".dc1.tmp");
+            using (StreamWriter sw = new StreamWriter(tmpOutputFile))
+            {
+                sw.AutoFlush = true;
+                sw.WriteLine("#HEADER:ProvinceCode,ProvinceName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
+
+                // Assumptions:
+                // The table is sorted by columns from left-to-right
+                using (StreamReader sr = new StreamReader(districtTableFile))
+                {
+                    string line = sr.ReadLine();
+                    while (!sr.EndOfStream && !string.IsNullOrWhiteSpace(line) && s_itemCount++ < s_maxItems)
+                    {
+                        if (line.StartsWith("#"))
+                        {
+                            line = sr.ReadLine();
+                            continue;
+                        }
+
+                        String[] tokens = line.Split(',');
+                        if (tokens.Length != 4)
+                        {
+                            Console.WriteLine("> !!Invalid input with more than 4 columns!: {0}", line);
+                            continue;
+                        }
+
+                        CountVotesHelperDc1(
+                            tokens[0],
+                            tokens[1],
+                            tokens[2],
+                            tokens[3],
+                            sw);
+
+                        line = sr.ReadLine();
+                    }
+
+                    timer.Stop();
+                    Console.WriteLine("> Crawler has finished iterating all provinces/kabupatens/kecamatans in {0} minutes", timer.Elapsed.Minutes);
+                    Console.WriteLine("> Waiting until all outstanding worker threads completed their jobs ... (timeout in 30 secs)");
+                    SpinWait.SpinUntil(() => { return s_outstandingWorkItems == -1; }, 10000);
+                }
+            }
+
+            GenerateSummaryDc1(outputFile);
+        }
+
+        static void GenerateSummaryDa1(String outputFile)
         {
             String logPayload = null;
             String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":\"{0}\",\n    \"PrabowoHattaPercentage\":\"{1:N4}\",\n    \"JokowiKallaVotes\":\"{2}\",\n    \"JokowiKallaPercentage\":\"{3:N4}\",\n    \"Total\":\"{4}\"\n}}";
@@ -410,7 +824,7 @@ namespace Pilpres2014
             String totalProvinceOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-province.json");
             String totalKabupatenOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-kabupaten.json");
 
-            using (StreamWriter swCSVTotal = new StreamWriter(outputFile))
+            using (StreamWriter swCSVTotal = new StreamWriter(Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".csv")))
             {
                 swCSVTotal.WriteLine("#HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,KecamatanCode,KecamatanName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
 
@@ -423,7 +837,7 @@ namespace Pilpres2014
                     {
                         swProvince.WriteLine("[");
 
-                        ThreeLevelDictionary.Enumerator provinceEnumeerator = s_tallyTable.VotingTable.GetEnumerator();
+                        ThreeLevelDictionary.Enumerator provinceEnumeerator = s_tallyTableDa1.VotingTable.GetEnumerator();
                         while (provinceEnumeerator.MoveNext())
                         {
                             BinaryTally provinceTally = new BinaryTally();
@@ -595,7 +1009,307 @@ namespace Pilpres2014
 
 
             // Do bad data reportings
-            Console.WriteLine("============================ BAD DATA REPORTING ============================");
+            Console.WriteLine("========================== DA1 BAD DATA REPORTING ============================");
+            foreach (String badData in s_badDataList)
+            {
+                Console.WriteLine("> BAD DATA: {0}", badData);
+                s_badDataList.Add(badData);
+            }
+            Console.WriteLine("======================== END OF BAD DATA REPORTING ============================");
+        }
+
+        static void GenerateSummaryDb1(String outputFile)
+        {
+            String logPayload = null;
+            String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":\"{0}\",\n    \"PrabowoHattaPercentage\":\"{1:N4}\",\n    \"JokowiKallaVotes\":\"{2}\",\n    \"JokowiKallaPercentage\":\"{3:N4}\",\n    \"Total\":\"{4}\"\n}}";
+            String stringFormatProvince = "{{\n    \"Province\":\"{0}\",\n    \"PrabowoHattaVotes\":\"{1}\",\n    \"PrabowoHattaPercentage\":\"{2:N4}\",\n    \"JokowiKallaVotes\":\"{3}\",\n    \"JokowiKallaPercentage\":\"{4:N4}\",\n    \"Total\":\"{5}\"\n}}";
+            String stringFormatKabupaten = "{{\n    \"ProvinceCode\":\"{0}\",\n    \"ProvinceName\":\"{1}\",\n    \"KabupatenCode\":\"{2}\",\n    \"KabupatenName\":\"{3}\",\n    \"PrabowoHattaVotes\":\"{4}\",\n    \"PrabowoHattaPercentage\":\"{5:N4}\",\n    \"JokowiKallaVotes\":\"{6}\",\n    \"JokowiKallaPercentage\":\"{7:N4}\",\n    \"Total\":\"{8}\"\n}}";
+            bool[] firstItems = new bool[2];
+            for (int i = 0; i < 2; ++i)
+            {
+                firstItems[i] = true;
+            }
+
+            String totalOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-total.db1.json");
+            String totalProvinceOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-province.db1.json");
+            String totalKabupatenOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-kabupaten.db1.json");
+
+            using (StreamWriter swCSVTotal = new StreamWriter(Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".db1.csv")))
+            {
+                swCSVTotal.WriteLine("#HEADER:ProvinceCode,ProvinceName,KabupatenCode,KabupatenName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
+
+                using (StreamWriter swtotal = new StreamWriter(totalOutputFile))
+                {
+                    BinaryTally nationTally = new BinaryTally();
+                    swtotal.WriteLine("[");
+
+                    using (StreamWriter swProvince = new StreamWriter(totalProvinceOutputFile))
+                    {
+                        swProvince.WriteLine("[");
+
+                        TwoLevelDictionary.Enumerator provinceEnumeerator = s_tallyTableDb1.VotingTable.GetEnumerator();
+                        while (provinceEnumeerator.MoveNext())
+                        {
+                            BinaryTally provinceTally = new BinaryTally();
+                            String provinceName = "";
+
+                            using (StreamWriter swKabupaten = new StreamWriter(totalKabupatenOutputFile))
+                            {
+                                swKabupaten.WriteLine("[");
+
+                                Dictionary<String, BinaryTally>.Enumerator kabupatenEnumerator = provinceEnumeerator.Current.Value.GetEnumerator();
+                                while (kabupatenEnumerator.MoveNext())
+                                {
+                                    provinceName = kabupatenEnumerator.Current.Value.ProvinceName;
+
+                                    // Dump complete raw data to CSV
+                                    swCSVTotal.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
+                                        kabupatenEnumerator.Current.Value.ProvinceCode,
+                                        kabupatenEnumerator.Current.Value.ProvinceName,
+                                        kabupatenEnumerator.Current.Value.KabupatenCode,
+                                        kabupatenEnumerator.Current.Value.KabupatenName,
+                                        kabupatenEnumerator.Current.Value.Counter1,
+                                        kabupatenEnumerator.Current.Value.Counter2,
+                                        kabupatenEnumerator.Current.Value.Total);
+
+                                    logPayload = String.Format(stringFormatKabupaten,
+                                        kabupatenEnumerator.Current.Value.ProvinceCode,
+                                        kabupatenEnumerator.Current.Value.ProvinceName,
+                                        kabupatenEnumerator.Current.Value.KabupatenCode,
+                                        kabupatenEnumerator.Current.Value.KabupatenName,
+                                        kabupatenEnumerator.Current.Value.Counter1,
+                                        kabupatenEnumerator.Current.Value.Total == 0 ? 0 : ((float)kabupatenEnumerator.Current.Value.Counter1 / kabupatenEnumerator.Current.Value.Total) * 100,
+                                        kabupatenEnumerator.Current.Value.Counter2,
+                                        kabupatenEnumerator.Current.Value.Total == 0 ? 0 : ((float)kabupatenEnumerator.Current.Value.Counter2 / kabupatenEnumerator.Current.Value.Total) * 100,
+                                        kabupatenEnumerator.Current.Value.Total);
+
+                                    if (firstItems[1] == true)
+                                    {
+                                        firstItems[1] = false;
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine(",");
+                                        swKabupaten.WriteLine(",");
+                                    }
+
+                                    Console.Write(logPayload);
+                                    swKabupaten.Write(logPayload);
+
+                                    if (!kabupatenEnumerator.Current.Value.CheckVoteIntegrity())
+                                    {
+                                        // Moves on but logs these data for reporting
+                                        String log = String.Format("Bad data integrity for Kabupaten {0}:{1}, vote1 {2} plus vote2 {3} does not equate to total {4}",
+                                            kabupatenEnumerator.Current.Value.KabupatenCode,
+                                            kabupatenEnumerator.Current.Value.KabupatenName,
+                                            kabupatenEnumerator.Current.Value.Counter1,
+                                            kabupatenEnumerator.Current.Value.Counter2,
+                                            kabupatenEnumerator.Current.Value.Total);
+
+                                        Console.WriteLine(log);
+                                        s_badDataList.Add(log);
+                                    }
+
+                                    provinceTally.Counter1 += kabupatenEnumerator.Current.Value.Counter1;
+                                    provinceTally.Counter2 += kabupatenEnumerator.Current.Value.Counter2;
+                                    provinceTally.Total += kabupatenEnumerator.Current.Value.Total;
+                                }
+
+                                swKabupaten.WriteLine("]");
+                            }
+
+                            logPayload = String.Format(stringFormatProvince,
+                                                       provinceName,
+                                                       provinceTally.Counter1,
+                                                       provinceTally.Total == 0 ? 0 : ((float)provinceTally.Counter1 / provinceTally.Total) * 100,
+                                                       provinceTally.Counter2,
+                                                       provinceTally.Total == 0 ? 0 : ((float)provinceTally.Counter2 / provinceTally.Total) * 100,
+                                                       provinceTally.Total);
+
+                            if (firstItems[0] == true)
+                            {
+                                firstItems[0] = false;
+                            }
+                            else
+                            {
+                                Console.WriteLine(",");
+                                swProvince.WriteLine(",");
+                            }
+
+                            Console.Write(logPayload);
+                            swProvince.Write(logPayload);
+
+                            firstItems[0] = false;
+
+                            if (!provinceTally.CheckVoteIntegrity())
+                            {
+                                // Moves on but log for reporting
+                                String log = String.Format("Data for Province {0} is invalid the sum of the vote1 {1} and vote2 {2} does not equate to {3}",
+                                        provinceName,
+                                        provinceTally.Counter1,
+                                        provinceTally.Counter2,
+                                        provinceTally.Total);
+
+                                Console.WriteLine(log);
+                                s_badDataList.Add(log);
+                            }
+
+                            // Sum each province to total
+                            nationTally.Counter1 += provinceTally.Counter1;
+                            nationTally.Counter2 += provinceTally.Counter2;
+                            nationTally.Total += provinceTally.Total;
+                        }
+
+                        swProvince.WriteLine("]");
+                    }
+
+
+                    logPayload = String.Format(stringFormatNation,
+                            nationTally.Counter1,
+                            nationTally.Total == 0 ? 0 : ((float)nationTally.Counter1 / nationTally.Total) * 100,
+                            nationTally.Counter2,
+                            nationTally.Total == 0 ? 0 : ((float)nationTally.Counter2 / nationTally.Total) * 100,
+                            nationTally.Total);
+
+                    if (!nationTally.CheckVoteIntegrity())
+                    {
+                        // Moves on but log for reporting
+                        String log = String.Format("Data for Nation level is invalid the sum of the vote1 {0} and vote2 {1} does not equate to {2}",
+                                nationTally.Counter1,
+                                nationTally.Counter2,
+                                nationTally.Total);
+
+                        Console.WriteLine(log);
+                        s_badDataList.Add(log);
+                    }
+
+                    Console.WriteLine(logPayload);
+                    swtotal.WriteLine(logPayload);
+                    swtotal.WriteLine("]");
+                }
+            }
+
+
+            // Do bad data reportings
+            Console.WriteLine("========================== DB1 BAD DATA REPORTING ============================");
+            foreach (String badData in s_badDataList)
+            {
+                Console.WriteLine("> BAD DATA: {0}", badData);
+                s_badDataList.Add(badData);
+            }
+            Console.WriteLine("======================== END OF BAD DATA REPORTING ============================");
+        }
+
+        static void GenerateSummaryDc1(String outputFile)
+        {
+            String logPayload = null;
+            String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":\"{0}\",\n    \"PrabowoHattaPercentage\":\"{1:N4}\",\n    \"JokowiKallaVotes\":\"{2}\",\n    \"JokowiKallaPercentage\":\"{3:N4}\",\n    \"Total\":\"{4}\"\n}}";
+            String stringFormatProvince = "{{\n    \"Province\":\"{0}\",\n    \"PrabowoHattaVotes\":\"{1}\",\n    \"PrabowoHattaPercentage\":\"{2:N4}\",\n    \"JokowiKallaVotes\":\"{3}\",\n    \"JokowiKallaPercentage\":\"{4:N4}\",\n    \"Total\":\"{5}\"\n}}";
+            bool[] firstItems = new bool[2];
+            for (int i = 0; i < 2; ++i)
+            {
+                firstItems[i] = true;
+            }
+
+            String totalOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-total.dc1.json");
+            String totalProvinceOutputFile = Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + "-province.dc1.json");
+
+            using (StreamWriter swCSVTotal = new StreamWriter(Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile) + ".dc1.csv")))
+            {
+                swCSVTotal.WriteLine("#HEADER:ProvinceCode,ProvinceName,PrabowoHattaVotes,JokowiKallaVotes,TotalVotes");
+
+                using (StreamWriter swtotal = new StreamWriter(totalOutputFile))
+                {
+                    BinaryTally nationTally = new BinaryTally();
+                    swtotal.WriteLine("[");
+
+                    using (StreamWriter swProvince = new StreamWriter(totalProvinceOutputFile))
+                    {
+                        Dictionary<String, BinaryTally>.Enumerator provinceEnumerator = s_tallyTableDc1.VotingTable.GetEnumerator();
+                        while (provinceEnumerator.MoveNext())
+                        {
+                            BinaryTally provinceTally = new BinaryTally();
+                            String provinceName = "";
+
+                            provinceName = provinceEnumerator.Current.Value.ProvinceName;
+
+                            // Dump complete raw data to CSV
+                            swCSVTotal.WriteLine("{0},{1},{2},{3},{4}",
+                                provinceEnumerator.Current.Value.ProvinceCode,
+                                provinceEnumerator.Current.Value.ProvinceName,
+                                provinceEnumerator.Current.Value.Counter1,
+                                provinceEnumerator.Current.Value.Counter2,
+                                provinceEnumerator.Current.Value.Total);
+
+                            logPayload = String.Format(stringFormatProvince,
+                                provinceEnumerator.Current.Value.ProvinceName,
+                                provinceEnumerator.Current.Value.Counter1,
+                                provinceEnumerator.Current.Value.Total == 0 ? 0 : ((float)provinceEnumerator.Current.Value.Counter1 / provinceEnumerator.Current.Value.Total) * 100,
+                                provinceEnumerator.Current.Value.Counter2,
+                                provinceEnumerator.Current.Value.Total == 0 ? 0 : ((float)provinceEnumerator.Current.Value.Counter2 / provinceEnumerator.Current.Value.Total) * 100,
+                                provinceEnumerator.Current.Value.Total);
+
+                            if (firstItems[1] == true)
+                            {
+                                firstItems[1] = false;
+                            }
+                            else
+                            {
+                                Console.WriteLine(",");
+                                swProvince.WriteLine(",");
+                            }
+
+                            Console.Write(logPayload);
+                            swProvince.Write(logPayload);
+
+                            if (!provinceEnumerator.Current.Value.CheckVoteIntegrity())
+                            {
+                                // Moves on but logs these data for reporting
+                                String log = String.Format("Bad data integrity for Province {0}:{1}, vote1 {2} plus vote2 {3} does not equate to total {4}",
+                                    provinceEnumerator.Current.Value.ProvinceCode,
+                                    provinceEnumerator.Current.Value.ProvinceName,
+                                    provinceEnumerator.Current.Value.Counter1,
+                                    provinceEnumerator.Current.Value.Counter2,
+                                    provinceEnumerator.Current.Value.Total);
+
+                                Console.WriteLine(log);
+                                s_badDataList.Add(log);
+                            }
+
+                            // Sum each province to total
+                            nationTally.Counter1 += provinceEnumerator.Current.Value.Counter1;
+                            nationTally.Counter2 += provinceEnumerator.Current.Value.Counter2;
+                            nationTally.Total += provinceEnumerator.Current.Value.Total;
+                        }
+                    }
+
+                    logPayload = String.Format(stringFormatNation,
+                            nationTally.Counter1,
+                            nationTally.Total == 0 ? 0 : ((float)nationTally.Counter1 / nationTally.Total) * 100,
+                            nationTally.Counter2,
+                            nationTally.Total == 0 ? 0 : ((float)nationTally.Counter2 / nationTally.Total) * 100,
+                            nationTally.Total);
+
+                    if (!nationTally.CheckVoteIntegrity())
+                    {
+                        // Moves on but log for reporting
+                        String log = String.Format("Data for Nation level is invalid the sum of the vote1 {0} and vote2 {1} does not equate to {2}",
+                                nationTally.Counter1,
+                                nationTally.Counter2,
+                                nationTally.Total);
+
+                        Console.WriteLine(log);
+                        s_badDataList.Add(log);
+                    }
+
+                    Console.WriteLine(logPayload);
+                    swtotal.WriteLine(logPayload);
+                    swtotal.WriteLine("]");
+                }
+            }
+
+            // Do bad data reportings
+            Console.WriteLine("========================== DC1 BAD DATA REPORTING ============================");
             foreach (String badData in s_badDataList)
             {
                 Console.WriteLine("> BAD DATA: {0}", badData);
@@ -633,7 +1347,9 @@ namespace Pilpres2014
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            CountVotes(tableFile, outputFile, threadCount);
+            CountVotesDc1(tableFile, outputFile, threadCount);
+            CountVotesDb1(tableFile, outputFile, threadCount);
+            CountVotesDa1(tableFile, outputFile, threadCount);
             sw.Stop();
             Console.WriteLine("> Completed crawling in {0} minutes. Press any key to continue ...", sw.Elapsed.Minutes);
         }

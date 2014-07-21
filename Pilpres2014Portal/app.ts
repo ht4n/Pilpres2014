@@ -49,8 +49,40 @@ class Pilpres2014 {
     selectedDataFeed: KnockoutObservable<{ datetime: string; }>;
     lastUpdatedTime: KnockoutObservable<string>;
     baseFeedUrl: string;
+    rekapLevels: KnockoutObservable<any>;
+    selectedRekapLevel: KnockoutObservable<string>;
+    suffix: string;
+    provinceSuffix: string;
 
     constructor() {
+        this.suffix = "-total.json";
+        this.provinceSuffix = "-province.json";
+        this.rekapLevels = ko.observableArray(["DA1", "DB1", "DC1"]);
+        this.selectedRekapLevel = ko.observable("DA1");
+        this.selectedRekapLevel.subscribe((value) => {
+            if (value === "DA1") {
+                this.suffix = "-total.json";
+                this.provinceSuffix = "-province.json";
+            }
+            else if (value === "DB1") {
+                this.suffix = "-total.db1.json";
+                this.provinceSuffix = "-province.db1.json";
+            }
+            else if (value == "DC1") {
+                this.suffix = "-total.dc1.json";
+                this.provinceSuffix = "-province.dc1.json";
+            }
+            else {
+                console.error("Invalid rekap level value " + value);
+                return;
+            }
+
+            this.refreshMainTicker(this.lastUpdatedTime());
+        });
+
+        this.showProvinceDetails = ko.observable(false);
+        this.showHistoricalData = ko.observable(false);
+
         var self = this;
         this.url = ko.observable("https://github.com/ht4n/Pilpres2014");
         this.provinces = ko.observableArray([]);
@@ -63,9 +95,7 @@ class Pilpres2014 {
         this.totalVotes = ko.observable("");
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
-        this.showProvinceDetails = ko.observable(false);
-        this.showHistoricalData = ko.observable(false);
-
+        
         this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
@@ -111,7 +141,7 @@ class Pilpres2014 {
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
-            var maxHistoricalEntries = Math.min(36, this.historicalFeeds().length);
+            var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 1), this.historicalFeeds().length);
 
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
@@ -121,7 +151,6 @@ class Pilpres2014 {
 
                 var dataJson = JSON.parse(data);
 
-                // Show max first 12 entries
                 for (var i = 0; i < dataJson.length; ++i) {
                     var entry: {
                         PrabowoHattaVotes: string;
@@ -155,7 +184,7 @@ class Pilpres2014 {
 
             for (var i = 0; i < maxHistoricalEntries; ++i) {
                 var value = this.historicalFeeds()[i];
-                this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
+                this.query("KPU-Feeds-" + value.datetime + this.suffix, { "datetime": value.datetime, "id": i }, historicalDataCallback);
             }
         }
     }
@@ -168,7 +197,6 @@ class Pilpres2014 {
         else {
             this.showProvinceDetails(true);
             this.toggleProvinceText("Collapse");
-
             var self = this;
             var provinceCallback = function (data, status) {
                 console.log("response:" + status);
@@ -195,7 +223,7 @@ class Pilpres2014 {
                 });
             }
 
-            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + "-province.json", null, provinceCallback);
+            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + this.provinceSuffix, null, provinceCallback);
         }
     }
 
@@ -271,7 +299,7 @@ class Pilpres2014 {
             };
         }
 
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + "-total.json", this.lastUpdatedTime(), totalCallback);
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.suffix, this.lastUpdatedTime(), totalCallback);
     }
 
     query(url, context?, callback?, statusCallback?) {
