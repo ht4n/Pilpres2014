@@ -36,7 +36,10 @@
             )
     </div>
     <hr/>
-    <span class="caption">Rekap Level:</span><select data-bind="options:rekapLevels,value:selectedRekapLevel"></select>
+    <span class="largeSectionLink">REKAP:</span>
+    <a href="#" data-bind="click:function(d, e) { selectRecap('DA1', d, e) }"><span class="largeSectionLink">DA1</span></a>
+    <a href="#" data-bind="click:function(d, e) { selectRecap('DB1', d, e) }"><span class="largeSectionLink">DB1</span></a>
+    <a href="#" data-bind="click:function(d, e) { selectRecap('DC1', d, e) }"><span class="largeSectionLink">DC1</span></a>
     <table class="scoreTable">
         <thead>
             <tr>
@@ -116,12 +119,13 @@
     |
     <a class="caption" href="barhierarchy.html">iHBar</a>
     |    
-    <a class="caption" href="deepbarhierarchy.html">MidLevel iHBar (Kabupaten)</a>
+    <a class="caption" href="midbarhierarchy.html">MidLevel iHBar (Kabupaten)</a>
     |
     <a class="caption" href="deepbarhierarchy.html">Deep iHBar (Warning:2MBytes)</a>
     <hr/>
     <div class="section">Provincial Votes:</div>
     <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText"></a>
+    <a href="#" data-bind="click:refreshProvinceDetails">Refresh</a>
     <hr />
     <!-- ko if:showProvinceDetails -->
     <span class="caption">(Click table header to sort)</span>

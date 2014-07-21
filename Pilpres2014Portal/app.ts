@@ -49,7 +49,6 @@ class Pilpres2014 {
     selectedDataFeed: KnockoutObservable<{ datetime: string; }>;
     lastUpdatedTime: KnockoutObservable<string>;
     baseFeedUrl: string;
-    rekapLevels: KnockoutObservable<any>;
     selectedRekapLevel: KnockoutObservable<string>;
     suffix: string;
     provinceSuffix: string;
@@ -57,29 +56,8 @@ class Pilpres2014 {
     constructor() {
         this.suffix = "-total.json";
         this.provinceSuffix = "-province.json";
-        this.rekapLevels = ko.observableArray(["DA1", "DB1", "DC1"]);
         this.selectedRekapLevel = ko.observable("DA1");
-        this.selectedRekapLevel.subscribe((value) => {
-            if (value === "DA1") {
-                this.suffix = "-total.json";
-                this.provinceSuffix = "-province.json";
-            }
-            else if (value === "DB1") {
-                this.suffix = "-total.db1.json";
-                this.provinceSuffix = "-province.db1.json";
-            }
-            else if (value == "DC1") {
-                this.suffix = "-total.dc1.json";
-                this.provinceSuffix = "-province.dc1.json";
-            }
-            else {
-                console.error("Invalid rekap level value " + value);
-                return;
-            }
-
-            this.refreshMainTicker(this.lastUpdatedTime());
-        });
-
+        
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
 
@@ -130,6 +108,30 @@ class Pilpres2014 {
         vm.$root.refreshMainTicker(data.datetime);
     }
 
+    selectRecap(value: string) {
+        if (value === "DA1") {
+            this.selectedRekapLevel("DA1");
+            this.suffix = "-total.json";
+            this.provinceSuffix = "-province.json";
+        }
+        else if (value === "DB1") {
+            this.selectedRekapLevel("DB1");
+            this.suffix = "-total.db1.json";
+            this.provinceSuffix = "-province.db1.json";
+        }
+        else if (value == "DC1") {
+            this.selectedRekapLevel("DC1");
+            this.suffix = "-total.dc1.json";
+            this.provinceSuffix = "-province.dc1.json";
+        }
+        else {
+            console.error("Invalid rekap level value " + value);
+            return;
+        }
+
+        this.refreshMainTicker(this.lastUpdatedTime());
+    }
+
     toggleHistoricalData() {
         if (this.showHistoricalData()) {
             this.showHistoricalData(false);
@@ -141,6 +143,8 @@ class Pilpres2014 {
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
+
+            // Use this workaround until DB1/DC1 catching up to 36 entries
             var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 1), this.historicalFeeds().length);
 
             var historicalDataCallback = function (data, status) {
@@ -197,34 +201,41 @@ class Pilpres2014 {
         else {
             this.showProvinceDetails(true);
             this.toggleProvinceText("Collapse");
-            var self = this;
-            var provinceCallback = function (data, status) {
-                console.log("response:" + status);
-                if (status !== "success") {
-                    return;
-                }
+        }
 
-                var dataJson = JSON.parse(data);
-                self.provinceVoteEntries.removeAll();
-                dataJson.forEach((entry) => {
-                    var voteEntry = new VoteEntry();
-                    voteEntry.totalVotes1Raw(parseInt(entry.PrabowoHattaVotes));
-                    voteEntry.totalVotes2Raw(parseInt(entry.JokowiKallaVotes));
-                    voteEntry.totalVotesRaw(parseInt(entry.Total));
+        if (this.showProvinceDetails()) {
+            this.refreshProvinceDetails();
+        }
+    }
 
-                    voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
-                    voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
-                    voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
-                    voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
-                    voteEntry.total(parseInt(entry.Total).toLocaleString());
-                    voteEntry.label(entry.Province);
-
-                    self.provinceVoteEntries.push(voteEntry);
-                });
+    refreshProvinceDetails() {
+        var self = this;
+        var provinceCallback = function (data, status) {
+            console.log("response:" + status);
+            if (status !== "success") {
+                return;
             }
 
-            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + this.provinceSuffix, null, provinceCallback);
+            var dataJson = JSON.parse(data);
+            self.provinceVoteEntries.removeAll();
+            dataJson.forEach((entry) => {
+                var voteEntry = new VoteEntry();
+                voteEntry.totalVotes1Raw(parseInt(entry.PrabowoHattaVotes));
+                voteEntry.totalVotes2Raw(parseInt(entry.JokowiKallaVotes));
+                voteEntry.totalVotesRaw(parseInt(entry.Total));
+
+                voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
+                voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
+                voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
+                voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
+                voteEntry.total(parseInt(entry.Total).toLocaleString());
+                voteEntry.label(entry.Province);
+
+                self.provinceVoteEntries.push(voteEntry);
+            });
         }
+
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.provinceSuffix, null, provinceCallback);    
     }
 
     sortProvinceData(field: number) {

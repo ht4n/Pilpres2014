@@ -27,6 +27,12 @@ table tbody {
     font-size: 24px;
 }
 
+.largeSectionLink {
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: 18px;
+}
+
 .sectionLink {
     padding-right: 4px;
     padding-left: 4px;

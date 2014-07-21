@@ -22,25 +22,7 @@ var Pilpres2014 = (function () {
         var _this = this;
         this.suffix = "-total.json";
         this.provinceSuffix = "-province.json";
-        this.rekapLevels = ko.observableArray(["DA1", "DB1", "DC1"]);
         this.selectedRekapLevel = ko.observable("DA1");
-        this.selectedRekapLevel.subscribe(function (value) {
-            if (value === "DA1") {
-                _this.suffix = "-total.json";
-                _this.provinceSuffix = "-province.json";
-            } else if (value === "DB1") {
-                _this.suffix = "-total.db1.json";
-                _this.provinceSuffix = "-province.db1.json";
-            } else if (value == "DC1") {
-                _this.suffix = "-total.dc1.json";
-                _this.provinceSuffix = "-province.dc1.json";
-            } else {
-                console.error("Invalid rekap level value " + value);
-                return;
-            }
-
-            _this.refreshMainTicker(_this.lastUpdatedTime());
-        });
 
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
@@ -91,6 +73,27 @@ var Pilpres2014 = (function () {
         vm.$root.refreshMainTicker(data.datetime);
     };
 
+    Pilpres2014.prototype.selectRecap = function (value) {
+        if (value === "DA1") {
+            this.selectedRekapLevel("DA1");
+            this.suffix = "-total.json";
+            this.provinceSuffix = "-province.json";
+        } else if (value === "DB1") {
+            this.selectedRekapLevel("DB1");
+            this.suffix = "-total.db1.json";
+            this.provinceSuffix = "-province.db1.json";
+        } else if (value == "DC1") {
+            this.selectedRekapLevel("DC1");
+            this.suffix = "-total.dc1.json";
+            this.provinceSuffix = "-province.dc1.json";
+        } else {
+            console.error("Invalid rekap level value " + value);
+            return;
+        }
+
+        this.refreshMainTicker(this.lastUpdatedTime());
+    };
+
     Pilpres2014.prototype.toggleHistoricalData = function () {
         if (this.showHistoricalData()) {
             this.showHistoricalData(false);
@@ -101,6 +104,8 @@ var Pilpres2014 = (function () {
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
+
+            // Use this workaround until DB1/DC1 catching up to 36 entries
             var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 1), this.historicalFeeds().length);
 
             var historicalDataCallback = function (data, status) {
@@ -151,34 +156,41 @@ var Pilpres2014 = (function () {
         } else {
             this.showProvinceDetails(true);
             this.toggleProvinceText("Collapse");
-            var self = this;
-            var provinceCallback = function (data, status) {
-                console.log("response:" + status);
-                if (status !== "success") {
-                    return;
-                }
-
-                var dataJson = JSON.parse(data);
-                self.provinceVoteEntries.removeAll();
-                dataJson.forEach(function (entry) {
-                    var voteEntry = new VoteEntry();
-                    voteEntry.totalVotes1Raw(parseInt(entry.PrabowoHattaVotes));
-                    voteEntry.totalVotes2Raw(parseInt(entry.JokowiKallaVotes));
-                    voteEntry.totalVotesRaw(parseInt(entry.Total));
-
-                    voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
-                    voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
-                    voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
-                    voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
-                    voteEntry.total(parseInt(entry.Total).toLocaleString());
-                    voteEntry.label(entry.Province);
-
-                    self.provinceVoteEntries.push(voteEntry);
-                });
-            };
-
-            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + this.provinceSuffix, null, provinceCallback);
         }
+
+        if (this.showProvinceDetails()) {
+            this.refreshProvinceDetails();
+        }
+    };
+
+    Pilpres2014.prototype.refreshProvinceDetails = function () {
+        var self = this;
+        var provinceCallback = function (data, status) {
+            console.log("response:" + status);
+            if (status !== "success") {
+                return;
+            }
+
+            var dataJson = JSON.parse(data);
+            self.provinceVoteEntries.removeAll();
+            dataJson.forEach(function (entry) {
+                var voteEntry = new VoteEntry();
+                voteEntry.totalVotes1Raw(parseInt(entry.PrabowoHattaVotes));
+                voteEntry.totalVotes2Raw(parseInt(entry.JokowiKallaVotes));
+                voteEntry.totalVotesRaw(parseInt(entry.Total));
+
+                voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
+                voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
+                voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
+                voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
+                voteEntry.total(parseInt(entry.Total).toLocaleString());
+                voteEntry.label(entry.Province);
+
+                self.provinceVoteEntries.push(voteEntry);
+            });
+        };
+
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.provinceSuffix, null, provinceCallback);
     };
 
     Pilpres2014.prototype.sortProvinceData = function (field) {

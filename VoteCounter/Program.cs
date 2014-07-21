@@ -1023,9 +1023,8 @@ namespace Pilpres2014
             String logPayload = null;
             String stringFormatNation = "{{\n    \"PrabowoHattaVotes\":\"{0}\",\n    \"PrabowoHattaPercentage\":\"{1:N4}\",\n    \"JokowiKallaVotes\":\"{2}\",\n    \"JokowiKallaPercentage\":\"{3:N4}\",\n    \"Total\":\"{4}\"\n}}";
             String stringFormatProvince = "{{\n    \"Province\":\"{0}\",\n    \"PrabowoHattaVotes\":\"{1}\",\n    \"PrabowoHattaPercentage\":\"{2:N4}\",\n    \"JokowiKallaVotes\":\"{3}\",\n    \"JokowiKallaPercentage\":\"{4:N4}\",\n    \"Total\":\"{5}\"\n}}";
-            String stringFormatKabupaten = "{{\n    \"ProvinceCode\":\"{0}\",\n    \"ProvinceName\":\"{1}\",\n    \"KabupatenCode\":\"{2}\",\n    \"KabupatenName\":\"{3}\",\n    \"PrabowoHattaVotes\":\"{4}\",\n    \"PrabowoHattaPercentage\":\"{5:N4}\",\n    \"JokowiKallaVotes\":\"{6}\",\n    \"JokowiKallaPercentage\":\"{7:N4}\",\n    \"Total\":\"{8}\"\n}}";
-            bool[] firstItems = new bool[2];
-            for (int i = 0; i < 2; ++i)
+            bool[] firstItems = new bool[1];
+            for (int i = 0; i < 1; ++i)
             {
                 firstItems[i] = true;
             }
@@ -1050,73 +1049,29 @@ namespace Pilpres2014
                         TwoLevelDictionary.Enumerator provinceEnumeerator = s_tallyTableDb1.VotingTable.GetEnumerator();
                         while (provinceEnumeerator.MoveNext())
                         {
-                            BinaryTally provinceTally = new BinaryTally();
                             String provinceName = "";
+                            BinaryTally provinceTally = new BinaryTally();
 
-                            using (StreamWriter swKabupaten = new StreamWriter(totalKabupatenOutputFile))
+                            Dictionary<String, BinaryTally>.Enumerator kabupatenEnumerator = provinceEnumeerator.Current.Value.GetEnumerator();
+                            while (kabupatenEnumerator.MoveNext())
                             {
-                                swKabupaten.WriteLine("[");
+                                provinceName = kabupatenEnumerator.Current.Value.ProvinceName;
 
-                                Dictionary<String, BinaryTally>.Enumerator kabupatenEnumerator = provinceEnumeerator.Current.Value.GetEnumerator();
-                                while (kabupatenEnumerator.MoveNext())
-                                {
-                                    provinceName = kabupatenEnumerator.Current.Value.ProvinceName;
+                                // Dump complete raw data to CSV
+                                swCSVTotal.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
+                                    kabupatenEnumerator.Current.Value.ProvinceCode,
+                                    kabupatenEnumerator.Current.Value.ProvinceName,
+                                    kabupatenEnumerator.Current.Value.KabupatenCode,
+                                    kabupatenEnumerator.Current.Value.KabupatenName,
+                                    kabupatenEnumerator.Current.Value.Counter1,
+                                    kabupatenEnumerator.Current.Value.Counter2,
+                                    kabupatenEnumerator.Current.Value.Total);
 
-                                    // Dump complete raw data to CSV
-                                    swCSVTotal.WriteLine("{0},{1},{2},{3},{4},{5},{6}",
-                                        kabupatenEnumerator.Current.Value.ProvinceCode,
-                                        kabupatenEnumerator.Current.Value.ProvinceName,
-                                        kabupatenEnumerator.Current.Value.KabupatenCode,
-                                        kabupatenEnumerator.Current.Value.KabupatenName,
-                                        kabupatenEnumerator.Current.Value.Counter1,
-                                        kabupatenEnumerator.Current.Value.Counter2,
-                                        kabupatenEnumerator.Current.Value.Total);
-
-                                    logPayload = String.Format(stringFormatKabupaten,
-                                        kabupatenEnumerator.Current.Value.ProvinceCode,
-                                        kabupatenEnumerator.Current.Value.ProvinceName,
-                                        kabupatenEnumerator.Current.Value.KabupatenCode,
-                                        kabupatenEnumerator.Current.Value.KabupatenName,
-                                        kabupatenEnumerator.Current.Value.Counter1,
-                                        kabupatenEnumerator.Current.Value.Total == 0 ? 0 : ((float)kabupatenEnumerator.Current.Value.Counter1 / kabupatenEnumerator.Current.Value.Total) * 100,
-                                        kabupatenEnumerator.Current.Value.Counter2,
-                                        kabupatenEnumerator.Current.Value.Total == 0 ? 0 : ((float)kabupatenEnumerator.Current.Value.Counter2 / kabupatenEnumerator.Current.Value.Total) * 100,
-                                        kabupatenEnumerator.Current.Value.Total);
-
-                                    if (firstItems[1] == true)
-                                    {
-                                        firstItems[1] = false;
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine(",");
-                                        swKabupaten.WriteLine(",");
-                                    }
-
-                                    Console.Write(logPayload);
-                                    swKabupaten.Write(logPayload);
-
-                                    if (!kabupatenEnumerator.Current.Value.CheckVoteIntegrity())
-                                    {
-                                        // Moves on but logs these data for reporting
-                                        String log = String.Format("Bad data integrity for Kabupaten {0}:{1}, vote1 {2} plus vote2 {3} does not equate to total {4}",
-                                            kabupatenEnumerator.Current.Value.KabupatenCode,
-                                            kabupatenEnumerator.Current.Value.KabupatenName,
-                                            kabupatenEnumerator.Current.Value.Counter1,
-                                            kabupatenEnumerator.Current.Value.Counter2,
-                                            kabupatenEnumerator.Current.Value.Total);
-
-                                        Console.WriteLine(log);
-                                        s_badDataList.Add(log);
-                                    }
-
-                                    provinceTally.Counter1 += kabupatenEnumerator.Current.Value.Counter1;
-                                    provinceTally.Counter2 += kabupatenEnumerator.Current.Value.Counter2;
-                                    provinceTally.Total += kabupatenEnumerator.Current.Value.Total;
-                                }
-
-                                swKabupaten.WriteLine("]");
+                                provinceTally.Counter1 += kabupatenEnumerator.Current.Value.Counter1;
+                                provinceTally.Counter2 += kabupatenEnumerator.Current.Value.Counter2;
+                                provinceTally.Total += kabupatenEnumerator.Current.Value.Total;
                             }
+
 
                             logPayload = String.Format(stringFormatProvince,
                                                        provinceName,
@@ -1189,7 +1144,6 @@ namespace Pilpres2014
                 }
             }
 
-
             // Do bad data reportings
             Console.WriteLine("========================== DB1 BAD DATA REPORTING ============================");
             foreach (String badData in s_badDataList)
@@ -1225,6 +1179,8 @@ namespace Pilpres2014
 
                     using (StreamWriter swProvince = new StreamWriter(totalProvinceOutputFile))
                     {
+                        swProvince.WriteLine("[");
+
                         Dictionary<String, BinaryTally>.Enumerator provinceEnumerator = s_tallyTableDc1.VotingTable.GetEnumerator();
                         while (provinceEnumerator.MoveNext())
                         {
@@ -1281,6 +1237,8 @@ namespace Pilpres2014
                             nationTally.Counter2 += provinceEnumerator.Current.Value.Counter2;
                             nationTally.Total += provinceEnumerator.Current.Value.Total;
                         }
+
+                        swProvince.WriteLine("]");
                     }
 
                     logPayload = String.Format(stringFormatNation,
