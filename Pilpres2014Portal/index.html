@@ -25,7 +25,14 @@
 
     <div class="pageTitle">Pilpres 2014 - DA1 Count</div>
     <hr/>    
-    <div><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
+    <div>
+        <a href="AboutUs.html"><span class="sectionLink">About us</span></a>
+        |
+        <a href="pilpres2014_architecture.png"><span class="sectionLink">Architecture(png)</span></a>
+        |
+        <a href="pilpres2014_architecture.pdf"><span class="sectionLink">Architecture(pdf)</span></a>
+    </div>
+    <hr/>
     <table class="scoreTable">
         <thead>
             <tr>
@@ -54,7 +61,8 @@
             </tr>
         </tbody>
     </table>
-    <hr />
+    <div style="text-align:right"><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
+    <hr />    
     <!-- FB-like and Twitter tweets -->
     <table align="center">
         <tr>
@@ -144,9 +152,6 @@
     <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten.json'}">kabupaten</a>
     <!-- /ko -->
 
-    <hr />
-    <a href="AboutUs.html">about us</a>
-    <a href="pilpres2014_architecture.png">architecture|png</a>
-    <a href="pilpres2014_architecture.pdf">architecture|pdf</a>
+    <hr />    
 </body>
 </html>
