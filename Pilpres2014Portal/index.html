@@ -120,12 +120,15 @@
     <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText"></a>
     <hr />
     <!-- ko if:showProvinceDetails -->
-    <table>
+    <table class="provinceTable">
         <thead>
             <tr>
                 <th>Province</th>
-                <th>Prabowo-Hatta(%)</th>
-                <th>Jokowi-Kalla(%)</th>
+				<th onclick="pilpres2014ViewModel.sortProvinceData(1);" >Prabowo-Hatta<br />(%)</th>
+				<th onclick="pilpres2014ViewModel.sortProvinceData(2);">Jokowi-Kalla<br />(%)</th>
+				<th onclick="pilpres2014ViewModel.sortProvinceData(3);">Prabowo-Hatta<br />(votes)</th>
+				<th onclick="pilpres2014ViewModel.sortProvinceData(4);">Jokowi-Kalla <br />(votes)</th>
+				<th onclick="pilpres2014ViewModel.sortProvinceData(5);">Total votes</th>
             </tr>
         </thead>
         <tbody>
@@ -134,6 +137,9 @@
                 <td><span data-bind="text:label"></span></td>
                 <td><span data-bind="text:percentageVotes1,css:{win:percentageVotes1() > 50.0,lose:percentageVotes1() < 50.0}"></span></td>
                 <td><span data-bind="text:percentageVotes2,css:{win:percentageVotes2() > 50.0,lose:percentageVotes2() < 50.0}"></span></td>
+				<td><span data-bind="text:totalVotes1,css:{win:percentageVotes1() > 50.0,lose:percentageVotes1() < 50.0}"></span></td>
+				<td><span data-bind="text:totalVotes2,css:{win:percentageVotes2() > 50.0,lose:percentageVotes2() < 50.0}"></span></td>
+				<td><span data-bind="text:total"></span></td>
             </tr>
             <!-- /ko -->
         </tbody>

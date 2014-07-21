@@ -2,6 +2,9 @@
 ///<reference path="Scripts/typings/knockout/knockout.d.ts"/>
 var VoteEntry = (function () {
     function VoteEntry() {
+        this.totalVotes1Raw = ko.observable(0);
+        this.totalVotes2Raw = ko.observable(0);
+        this.totalVotesRaw = ko.observable(0);
         this.totalVotes1 = ko.observable("");
         this.percentageVotes1 = ko.observable("");
         this.totalVotes2 = ko.observable("");
@@ -137,11 +140,15 @@ var Pilpres2014 = (function () {
                 self.provinceVoteEntries.removeAll();
                 dataJson.forEach(function (entry) {
                     var voteEntry = new VoteEntry();
-                    voteEntry.totalVotes1(entry.PrabowoHattaVotes);
+                    voteEntry.totalVotes1Raw(parseInt(entry.PrabowoHattaVotes));
+                    voteEntry.totalVotes2Raw(parseInt(entry.JokowiKallaVotes));
+                    voteEntry.totalVotesRaw(parseInt(entry.Total));
+
+                    voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                     voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2));
-                    voteEntry.totalVotes2(entry.PrabowoHattaVotes);
+                    voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
                     voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2));
-                    voteEntry.total(entry.Total);
+                    voteEntry.total(parseInt(entry.Total).toLocaleString());
                     voteEntry.label(entry.Province);
 
                     self.provinceVoteEntries.push(voteEntry);
@@ -149,6 +156,37 @@ var Pilpres2014 = (function () {
             };
 
             this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + "-province.json", null, provinceCallback);
+        }
+    };
+
+    Pilpres2014.prototype.sortProvinceData = function (field) {
+        var self = this;
+        switch (field) {
+            case 1:
+                self.provinceVoteEntries.sort(function (a, b) {
+                    return parseFloat(b.percentageVotes1()) - parseFloat(a.percentageVotes1());
+                });
+                break;
+            case 2:
+                self.provinceVoteEntries.sort(function (a, b) {
+                    return parseFloat(b.percentageVotes2()) - parseFloat(a.percentageVotes2());
+                });
+                break;
+            case 3:
+                self.provinceVoteEntries.sort(function (a, b) {
+                    return b.totalVotes1Raw() - a.totalVotes1Raw();
+                });
+                break;
+            case 4:
+                self.provinceVoteEntries.sort(function (a, b) {
+                    return b.totalVotes2Raw() - a.totalVotes2Raw();
+                });
+                break;
+            case 5:
+                self.provinceVoteEntries.sort(function (a, b) {
+                    return b.totalVotesRaw() - a.totalVotesRaw();
+                });
+                break;
         }
     };
 
@@ -212,8 +250,10 @@ var Pilpres2014 = (function () {
     return Pilpres2014;
 })();
 
+var pilpres2014ViewModel;
+
 window.onload = function () {
-    var pilpres2014ViewModel = new Pilpres2014();
+    pilpres2014ViewModel = new Pilpres2014();
     ko.applyBindings(pilpres2014ViewModel);
 };
 //# sourceMappingURL=app.js.map
