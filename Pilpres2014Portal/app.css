@@ -28,7 +28,6 @@ table tbody {
 }
 
 .sectionLink {
-    background: white;
     padding-right: 4px;
     padding-left: 4px;
     font-size: 14px;
@@ -100,4 +99,8 @@ a {
 
 iframe {
     width:100%;
+}
+
+.tableHeader {
+    background:#e0e4e4;
 }
