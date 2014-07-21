@@ -35,11 +35,7 @@
             <a href="Resources/pilpres2014_architecture.pdf"><span class="sectionLink">pdf</span></a>
             )
     </div>
-    <hr/>
-    <span class="largeSectionLink">REKAP:</span>
-    <a href="#" data-bind="click:function(d, e) { selectRecap('DA1', d, e) }"><span class="largeSectionLink">DA1</span></a>
-    <a href="#" data-bind="click:function(d, e) { selectRecap('DB1', d, e) }"><span class="largeSectionLink">DB1</span></a>
-    <a href="#" data-bind="click:function(d, e) { selectRecap('DC1', d, e) }"><span class="largeSectionLink">DC1</span></a>
+	<hr />
     <table class="scoreTable">
         <thead>
             <tr>
@@ -48,18 +44,58 @@
             </tr>
         </thead>
         <tbody>
+			<!-- ko with: totalVoteEntries()[2] -->
             <tr>
                 <td>
                     <span data-bind="text:percentageVotes1,attr:{class:status1()}"></span>
                 </td>
                 <td>
-                    <span data-bind="text:percentageVotes2,attr:{class:status2()}"></span>
+					<span data-bind="text:percentageVotes2,attr:{class:status2()}"></span>
                 </td>
             </tr>
             <tr>
-                <td><span data-bind="text:totalVotes1"></span></td>
-                <td><span data-bind="text:totalVotes2"></span></td>
+                <td><span data-bind="text:totalVotes1"></span> (<span data-bind="text:label"></span>)</td>
+                <td><span data-bind="text:totalVotes2"></span> (<span data-bind="text:label"></span>)</td>
             </tr>
+			<!-- /ko -->
+			<tr>
+				<td>
+					<table class="alternativeDataTable">
+						<tr>
+							<!-- ko with: totalVoteEntries()[0] -->
+							<td><span data-bind="text:label"></span>: </td>
+							<td><span data-bind="text:percentageVotes1"></span>, </td>
+							<td><span data-bind="text:totalVotes1"></span></td>
+							<!-- /ko -->
+						</tr>
+						<tr>
+							<!-- ko with: totalVoteEntries()[1] -->
+							<td><span data-bind="text:label"></span>: </td>
+							<td><span data-bind="text:percentageVotes1"></span>, </td>
+							<td><span data-bind="text:totalVotes1"></span></td>
+							<!-- /ko -->
+						</tr>
+					</table>
+				</td>
+				<td>
+					<table class="alternativeDataTable">
+						<tr>
+							<!-- ko with: totalVoteEntries()[0] -->
+							<td><span data-bind="text:label"></span>: </td>
+							<td><span data-bind="text:percentageVotes2"></span>, </td>
+							<td><span data-bind="text:totalVotes2"></span></td>
+							<!-- /ko -->
+						</tr>
+						<tr>
+							<!-- ko with: totalVoteEntries()[1] -->
+							<td><span data-bind="text:label"></span>: </td>
+							<td><span data-bind="text:percentageVotes2"></span>, </td>
+							<td><span data-bind="text:totalVotes2"></span></td>
+							<!-- /ko -->
+						</tr>
+					</table>
+				</td>
+			</tr>
             <tr>
                 <td colspan="2">
                     <div class="redSeparator"></div>
@@ -86,7 +122,11 @@
             </td>
         </tr>
     </table>
-    <hr />
+	<hr />
+	<span class="largeSectionLink">REKAP:</span>
+	<a href="#" data-bind="click:function(d, e) { selectRecap('DA1', d, e) }"><span class="largeSectionLink">DA1</span></a>
+	<a href="#" data-bind="click:function(d, e) { selectRecap('DB1', d, e) }"><span class="largeSectionLink">DB1</span></a>
+	<a href="#" data-bind="click:function(d, e) { selectRecap('DC1', d, e) }"><span class="largeSectionLink">DC1</span></a>
     <div class="section">Last 72 Hours:</div>
     <a href="#" data-bind="click:toggleHistoricalData,text:toggleHistoricalText"></a>
     <hr />

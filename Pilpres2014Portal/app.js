@@ -39,6 +39,7 @@ var Pilpres2014 = (function () {
         this.totalVotes = ko.observable("");
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
+        this.totalVoteEntries = ko.observableArray([]);
 
         this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
@@ -165,6 +166,7 @@ var Pilpres2014 = (function () {
 
     Pilpres2014.prototype.refreshProvinceDetails = function () {
         var self = this;
+
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
             if (status !== "success") {
@@ -227,8 +229,19 @@ var Pilpres2014 = (function () {
     Pilpres2014.prototype.refreshMainTicker = function (datetime) {
         var self = this;
         self.voteEntries.removeAll();
+        self.totalVoteEntries.removeAll();
+        self.totalVoteEntries([null, null, null]);
+        var da1Callback = function (data, status) {
+            totalCallback(data, status, 0);
+        };
+        var db1Callback = function (data, status) {
+            totalCallback(data, status, 1);
+        };
+        var dc1Callback = function (data, status) {
+            totalCallback(data, status, 2);
+        };
 
-        var totalCallback = function (data, status) {
+        var totalCallback = function (data, status, idx) {
             console.log("response:" + status);
             if (status !== "success") {
                 return;
@@ -242,15 +255,28 @@ var Pilpres2014 = (function () {
                 var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
-                voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
+                voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win " : "bigScore");
                 voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
                 voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
-                voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
+                voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "bigScore win" : "bigScore");
                 voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
                 voteEntry.total(entry.Total);
-                voteEntry.label(context);
+                switch (idx) {
+                    case 0:
+                        voteEntry.label("DA1");
+                        break;
+                    case 1:
+                        voteEntry.label("DB1");
+                        break;
+                    case 2:
+                        voteEntry.label("DC1");
+                        break;
+                }
+
+                self.totalVoteEntries()[idx] = voteEntry;
+                self.totalVoteEntries.notifySubscribers();
 
                 self.percentageVotes1(voteEntry.percentageVotes1());
                 self.percentageVotes2(voteEntry.percentageVotes2());
@@ -263,8 +289,12 @@ var Pilpres2014 = (function () {
             }
             ;
         };
-
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.suffix, this.lastUpdatedTime(), totalCallback);
+        var suffix = "-total.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), da1Callback);
+        suffix = "-total.db1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), db1Callback);
+        suffix = "-total.dc1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), dc1Callback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {

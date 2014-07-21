@@ -14,6 +14,11 @@ table tbody {
 	width: 80%;
 }
 
+.alternativeDataTable {
+	margin-left:auto; 
+    margin-right:auto;
+}
+
 .scoreTable {
     margin-left: 0%;
     margin-right: 0%;
