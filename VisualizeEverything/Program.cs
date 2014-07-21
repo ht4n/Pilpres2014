@@ -296,6 +296,7 @@ namespace VisualizeEverything
             maxDepth = args[2];
             using (StreamWriter sw = new StreamWriter(output))
             {
+                sw.AutoFlush = true;
                 sw.WriteLine("{");
                 sw.WriteLine("    \"name\":\"Pilpres2014\",");
                 sw.WriteLine("    \"children\": [");
