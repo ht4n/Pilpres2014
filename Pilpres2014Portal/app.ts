@@ -143,6 +143,8 @@ class Pilpres2014 {
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
+
+            // Use this workaround until DB1/DC1 catching up to 36 entries
             var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 1), this.historicalFeeds().length);
 
             var historicalDataCallback = function (data, status) {
