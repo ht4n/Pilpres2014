@@ -20,6 +20,31 @@ var VoteEntry = (function () {
 var Pilpres2014 = (function () {
     function Pilpres2014() {
         var _this = this;
+        this.suffix = "-total.json";
+        this.provinceSuffix = "-province.json";
+        this.rekapLevels = ko.observableArray(["DA1", "DB1", "DC1"]);
+        this.selectedRekapLevel = ko.observable("DA1");
+        this.selectedRekapLevel.subscribe(function (value) {
+            if (value === "DA1") {
+                _this.suffix = "-total.json";
+                _this.provinceSuffix = "-province.json";
+            } else if (value === "DB1") {
+                _this.suffix = "-total.db1.json";
+                _this.provinceSuffix = "-province.db1.json";
+            } else if (value == "DC1") {
+                _this.suffix = "-total.dc1.json";
+                _this.provinceSuffix = "-province.dc1.json";
+            } else {
+                console.error("Invalid rekap level value " + value);
+                return;
+            }
+
+            _this.refreshMainTicker(_this.lastUpdatedTime());
+        });
+
+        this.showProvinceDetails = ko.observable(false);
+        this.showHistoricalData = ko.observable(false);
+
         var self = this;
         this.url = ko.observable("https://github.com/ht4n/Pilpres2014");
         this.provinces = ko.observableArray([]);
@@ -32,8 +57,6 @@ var Pilpres2014 = (function () {
         this.totalVotes = ko.observable("");
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
-        this.showProvinceDetails = ko.observable(false);
-        this.showHistoricalData = ko.observable(false);
 
         this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
@@ -78,7 +101,7 @@ var Pilpres2014 = (function () {
             var self = this;
             var voteEntries = [];
             var dataCount = 0;
-            var maxHistoricalEntries = Math.min(36, this.historicalFeeds().length);
+            var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 1), this.historicalFeeds().length);
 
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
@@ -116,7 +139,7 @@ var Pilpres2014 = (function () {
 
             for (var i = 0; i < maxHistoricalEntries; ++i) {
                 var value = this.historicalFeeds()[i];
-                this.query("KPU-Feeds-" + value.datetime + "-total.json", { "datetime": value.datetime, "id": i }, historicalDataCallback);
+                this.query("KPU-Feeds-" + value.datetime + this.suffix, { "datetime": value.datetime, "id": i }, historicalDataCallback);
             }
         }
     };
@@ -128,7 +151,6 @@ var Pilpres2014 = (function () {
         } else {
             this.showProvinceDetails(true);
             this.toggleProvinceText("Collapse");
-
             var self = this;
             var provinceCallback = function (data, status) {
                 console.log("response:" + status);
@@ -155,7 +177,7 @@ var Pilpres2014 = (function () {
                 });
             };
 
-            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + "-province.json", null, provinceCallback);
+            this.query("KPU-Feeds-" + this.selectedDataFeed().datetime + this.provinceSuffix, null, provinceCallback);
         }
     };
 
@@ -230,7 +252,7 @@ var Pilpres2014 = (function () {
             ;
         };
 
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + "-total.json", this.lastUpdatedTime(), totalCallback);
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.suffix, this.lastUpdatedTime(), totalCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {
