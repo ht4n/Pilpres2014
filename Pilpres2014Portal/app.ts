@@ -272,6 +272,21 @@ class Pilpres2014 {
         }
     }
 
+    toggleShowTotalVoteEntries() {
+        var self = this;
+        // if all three entries are not null, show the total vote entries
+        var showTotal = true;
+        var i = 0;
+        while (showTotal && i < 3) {
+            showTotal = self.totalVoteEntries()[i] != null;
+            i++;
+        }
+        if (showTotal) {
+            self.showTotalVoteEntries(true);
+        }
+
+    }
+
     refreshMainTicker(datetime: string) {
         var self = this;
         self.voteEntries.removeAll();
@@ -280,7 +295,8 @@ class Pilpres2014 {
 
         self.totalVoteEntries([null, null, null]);
         var da1Callback = function (data, status) {
-            totalCallback (data, status, 0);
+            totalCallback(data, status, 0);
+            self.toggleShowTotalVoteEntries(); 
         }
         var db1Callback = function (data, status) {
             totalCallback (data, status, 1);
@@ -292,6 +308,7 @@ class Pilpres2014 {
         var totalCallback = function (data, status, idx) {
             console.log("response:" + status);
             if (status !== "success") {
+                self.totalVoteEntries()[idx] = new VoteEntry();
                 return;
             }
 
@@ -324,17 +341,8 @@ class Pilpres2014 {
                 }
 
                 self.totalVoteEntries()[idx] = voteEntry;
-                // if all three entries are not null, show the total vote entries
-                var showTotal = true;
-                var i = 0;
-                while (showTotal && i < 3) {
-                    showTotal = self.totalVoteEntries()[i] != null;
-                    i++;
-                } 
-                if (showTotal) {
-                    self.showTotalVoteEntries(true);
-                }
-
+                self.toggleShowTotalVoteEntries(); 
+        
                 self.totalVoteEntries.notifySubscribers();
 
                 self.percentageVotes1(voteEntry.percentageVotes1());
