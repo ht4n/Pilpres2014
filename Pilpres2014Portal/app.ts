@@ -337,7 +337,7 @@ class Pilpres2014 {
                 switch (idx) {
                     case 0: voteEntry.label("DA1: "); break;
                     case 1: voteEntry.label("DB1: "); break;
-                    case 2: voteEntry.label(" (DC1)"); break;
+                    case 2: voteEntry.label("DC1: "); break;
                 }
 
                 self.totalVoteEntries()[idx] = voteEntry;

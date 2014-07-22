@@ -290,7 +290,7 @@ var Pilpres2014 = (function () {
                         voteEntry.label("DB1: ");
                         break;
                     case 2:
-                        voteEntry.label(" (DC1)");
+                        voteEntry.label("DC1: ");
                         break;
                 }
 
