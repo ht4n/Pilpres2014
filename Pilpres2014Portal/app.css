@@ -115,3 +115,7 @@ iframe {
 .tableHeader {
     background:#e0e4e4;
 }
+
+.twitterEmbed {
+    vertical-align: top;
+}
