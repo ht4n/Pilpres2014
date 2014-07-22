@@ -22,7 +22,33 @@ var Pilpres2014 = (function () {
         var _this = this;
         this.suffix = "-total.dc1.json";
         this.provinceSuffix = "-province.dc1.json";
+        this.rekapLevels = ko.observableArray(["DA1", "DB1", "DC1"]);
         this.selectedRekapLevel = ko.observable("DC1");
+        this.selectedRekapLevel.subscribe(function (value) {
+            if (value === "DA1") {
+                _this.suffix = "-total.json";
+                _this.provinceSuffix = "-province.json";
+            } else if (value === "DB1") {
+                _this.suffix = "-total.db1.json";
+                _this.provinceSuffix = "-province.db1.json";
+            } else if (value == "DC1") {
+                _this.suffix = "-total.dc1.json";
+                _this.provinceSuffix = "-province.dc1.json";
+            } else {
+                console.error("Invalid rekap level value " + value);
+                return;
+            }
+        });
+
+        this.getFileRekapPrefix = ko.computed(function () {
+            if (_this.selectedRekapLevel() == "DA1") {
+                // This is due to backward compatibility of the file
+                // format that initially has no rekap suffix
+                return "";
+            } else {
+                return "." + _this.selectedRekapLevel().toLowerCase();
+            }
+        }, this);
 
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
@@ -71,27 +97,6 @@ var Pilpres2014 = (function () {
     Pilpres2014.prototype.updateVoteByDate = function (data, event) {
         var vm = ko.contextFor(event.currentTarget);
         vm.$root.refreshMainTicker(data.datetime);
-    };
-
-    Pilpres2014.prototype.selectRecap = function (value) {
-        if (value === "DA1") {
-            this.selectedRekapLevel("DA1");
-            this.suffix = "-total.json";
-            this.provinceSuffix = "-province.json";
-        } else if (value === "DB1") {
-            this.selectedRekapLevel("DB1");
-            this.suffix = "-total.db1.json";
-            this.provinceSuffix = "-province.db1.json";
-        } else if (value == "DC1") {
-            this.selectedRekapLevel("DC1");
-            this.suffix = "-total.dc1.json";
-            this.provinceSuffix = "-province.dc1.json";
-        } else {
-            console.error("Invalid rekap level value " + value);
-            return;
-        }
-
-        this.refreshMainTicker(this.lastUpdatedTime());
     };
 
     Pilpres2014.prototype.toggleHistoricalData = function () {

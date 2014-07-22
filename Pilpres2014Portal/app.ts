@@ -53,15 +53,47 @@ class Pilpres2014 {
     selectedDataFeed: KnockoutObservable<{ datetime: string; }>;
     lastUpdatedTime: KnockoutObservable<string>;
     baseFeedUrl: string;
+    rekapLevels: KnockoutObservableArray<string>;
     selectedRekapLevel: KnockoutObservable<string>;
     suffix: string;
     provinceSuffix: string;
+    getFileRekapPrefix: KnockoutComputed<any>;
 
     constructor() {
         this.suffix = "-total.dc1.json";
         this.provinceSuffix = "-province.dc1.json";
+        this.rekapLevels = ko.observableArray([ "DA1", "DB1", "DC1" ]);
         this.selectedRekapLevel = ko.observable("DC1");
-        
+        this.selectedRekapLevel.subscribe((value) => {
+            if (value === "DA1") {
+                this.suffix = "-total.json";
+                this.provinceSuffix = "-province.json";
+            }
+            else if (value === "DB1") {
+                this.suffix = "-total.db1.json";
+                this.provinceSuffix = "-province.db1.json";
+            }
+            else if (value == "DC1") {
+                this.suffix = "-total.dc1.json";
+                this.provinceSuffix = "-province.dc1.json";
+            }
+            else {
+                console.error("Invalid rekap level value " + value);
+                return;
+            }
+        });
+
+        this.getFileRekapPrefix = ko.computed(() => {
+            if (this.selectedRekapLevel() == "DA1") {
+                // This is due to backward compatibility of the file
+                // format that initially has no rekap suffix
+                return "";
+            }
+            else {
+                return "." + this.selectedRekapLevel().toLowerCase();
+            }
+        }, this);
+
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
 
@@ -105,35 +137,11 @@ class Pilpres2014 {
         
         this.toggleHistoricalText = ko.observable("Expand");
         this.toggleProvinceText = ko.observable("Expand");
-    }
+    } 
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
         var vm = ko.contextFor(event.currentTarget);
         vm.$root.refreshMainTicker(data.datetime);
-    }
-
-    selectRecap(value: string) {
-        if (value === "DA1") {
-            this.selectedRekapLevel("DA1");
-            this.suffix = "-total.json";
-            this.provinceSuffix = "-province.json";
-        }
-        else if (value === "DB1") {
-            this.selectedRekapLevel("DB1");
-            this.suffix = "-total.db1.json";
-            this.provinceSuffix = "-province.db1.json";
-        }
-        else if (value == "DC1") {
-            this.selectedRekapLevel("DC1");
-            this.suffix = "-total.dc1.json";
-            this.provinceSuffix = "-province.dc1.json";
-        }
-        else {
-            console.error("Invalid rekap level value " + value);
-            return;
-        }
-
-        this.refreshMainTicker(this.lastUpdatedTime());
     }
 
     toggleHistoricalData() {
