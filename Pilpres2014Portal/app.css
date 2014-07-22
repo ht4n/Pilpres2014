@@ -19,6 +19,11 @@ table tbody {
     margin-right:auto;
 }
 
+img.center {
+    margin: 0 auto;
+    display: block;
+}
+
 .scoreTable {
     margin-left: 0%;
     margin-right: 0%;
