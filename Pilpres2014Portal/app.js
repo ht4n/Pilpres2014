@@ -20,9 +20,35 @@ var VoteEntry = (function () {
 var Pilpres2014 = (function () {
     function Pilpres2014() {
         var _this = this;
-        this.suffix = "-total.json";
-        this.provinceSuffix = "-province.json";
-        this.selectedRekapLevel = ko.observable("DA1");
+        this.suffix = "-total.dc1.json";
+        this.provinceSuffix = "-province.dc1.json";
+        this.rekapLevels = ko.observableArray(["DA1", "DB1", "DC1"]);
+        this.selectedRekapLevel = ko.observable("DC1");
+        this.selectedRekapLevel.subscribe(function (value) {
+            if (value === "DA1") {
+                _this.suffix = "-total.json";
+                _this.provinceSuffix = "-province.json";
+            } else if (value === "DB1") {
+                _this.suffix = "-total.db1.json";
+                _this.provinceSuffix = "-province.db1.json";
+            } else if (value == "DC1") {
+                _this.suffix = "-total.dc1.json";
+                _this.provinceSuffix = "-province.dc1.json";
+            } else {
+                console.error("Invalid rekap level value " + value);
+                return;
+            }
+        });
+
+        this.getFileRekapPrefix = ko.computed(function () {
+            if (_this.selectedRekapLevel() == "DA1") {
+                // This is due to backward compatibility of the file
+                // format that initially has no rekap suffix
+                return "";
+            } else {
+                return "." + _this.selectedRekapLevel().toLowerCase();
+            }
+        }, this);
 
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
@@ -39,7 +65,7 @@ var Pilpres2014 = (function () {
         this.totalVotes = ko.observable("");
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
-
+        this.totalVoteEntries = ko.observableArray([]);
         this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
@@ -71,27 +97,6 @@ var Pilpres2014 = (function () {
     Pilpres2014.prototype.updateVoteByDate = function (data, event) {
         var vm = ko.contextFor(event.currentTarget);
         vm.$root.refreshMainTicker(data.datetime);
-    };
-
-    Pilpres2014.prototype.selectRecap = function (value) {
-        if (value === "DA1") {
-            this.selectedRekapLevel("DA1");
-            this.suffix = "-total.json";
-            this.provinceSuffix = "-province.json";
-        } else if (value === "DB1") {
-            this.selectedRekapLevel("DB1");
-            this.suffix = "-total.db1.json";
-            this.provinceSuffix = "-province.db1.json";
-        } else if (value == "DC1") {
-            this.selectedRekapLevel("DC1");
-            this.suffix = "-total.dc1.json";
-            this.provinceSuffix = "-province.dc1.json";
-        } else {
-            console.error("Invalid rekap level value " + value);
-            return;
-        }
-
-        this.refreshMainTicker(this.lastUpdatedTime());
     };
 
     Pilpres2014.prototype.toggleHistoricalData = function () {
@@ -165,6 +170,7 @@ var Pilpres2014 = (function () {
 
     Pilpres2014.prototype.refreshProvinceDetails = function () {
         var self = this;
+
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
             if (status !== "success") {
@@ -235,22 +241,36 @@ var Pilpres2014 = (function () {
             }
 
             var dataJson = JSON.parse(data);
+            var context = this;
+            var idx = this.id;
 
             for (var i = 0; i < dataJson.length; ++i) {
                 var entry = dataJson[i];
 
-                var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
-                voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
+                voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win " : "bigScore");
                 voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
                 voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
-                voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
+                voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "bigScore win" : "bigScore");
                 voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
                 voteEntry.total(entry.Total);
-                voteEntry.label(context);
+                switch (idx) {
+                    case 0:
+                        voteEntry.label("DA1: ");
+                        break;
+                    case 1:
+                        voteEntry.label("DB1: ");
+                        break;
+                    case 2:
+                        voteEntry.label("DC1: ");
+                        break;
+                }
+
+                self.totalVoteEntries()[idx] = voteEntry;
+                self.totalVoteEntries.notifySubscribers();
 
                 self.percentageVotes1(voteEntry.percentageVotes1());
                 self.percentageVotes2(voteEntry.percentageVotes2());
@@ -263,8 +283,14 @@ var Pilpres2014 = (function () {
             }
             ;
         };
+        var suffix;
 
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.suffix, this.lastUpdatedTime(), totalCallback);
+        suffix = "-total.dc1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 2 }, totalCallback);
+        suffix = "-total.db1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 1 }, totalCallback);
+        suffix = "-total.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 0 }, totalCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {

@@ -29,6 +29,7 @@ class VoteEntry {
     }
 }
 
+
 class Pilpres2014 {
     provinces: KnockoutObservableArray<string>;
     url: KnockoutObservable<string>;
@@ -38,8 +39,11 @@ class Pilpres2014 {
     totalVotes2: KnockoutObservable<string>;
     percentageVotes1: KnockoutObservable<string>;
     percentageVotes2: KnockoutObservable<string>;
+ 
     totalVotes: KnockoutObservable<string>;
     voteEntries: KnockoutObservableArray<VoteEntry>;
+    totalVoteEntries: KnockoutObservableArray<VoteEntry>;
+
     provinceVoteEntries: KnockoutObservableArray<VoteEntry>;
     showProvinceDetails: KnockoutObservable<boolean>;
     toggleProvinceText: KnockoutObservable<string>;
@@ -49,15 +53,47 @@ class Pilpres2014 {
     selectedDataFeed: KnockoutObservable<{ datetime: string; }>;
     lastUpdatedTime: KnockoutObservable<string>;
     baseFeedUrl: string;
+    rekapLevels: KnockoutObservableArray<string>;
     selectedRekapLevel: KnockoutObservable<string>;
     suffix: string;
     provinceSuffix: string;
+    getFileRekapPrefix: KnockoutComputed<any>;
 
     constructor() {
-        this.suffix = "-total.json";
-        this.provinceSuffix = "-province.json";
-        this.selectedRekapLevel = ko.observable("DA1");
-        
+        this.suffix = "-total.dc1.json";
+        this.provinceSuffix = "-province.dc1.json";
+        this.rekapLevels = ko.observableArray([ "DA1", "DB1", "DC1" ]);
+        this.selectedRekapLevel = ko.observable("DC1");
+        this.selectedRekapLevel.subscribe((value) => {
+            if (value === "DA1") {
+                this.suffix = "-total.json";
+                this.provinceSuffix = "-province.json";
+            }
+            else if (value === "DB1") {
+                this.suffix = "-total.db1.json";
+                this.provinceSuffix = "-province.db1.json";
+            }
+            else if (value == "DC1") {
+                this.suffix = "-total.dc1.json";
+                this.provinceSuffix = "-province.dc1.json";
+            }
+            else {
+                console.error("Invalid rekap level value " + value);
+                return;
+            }
+        });
+
+        this.getFileRekapPrefix = ko.computed(() => {
+            if (this.selectedRekapLevel() == "DA1") {
+                // This is due to backward compatibility of the file
+                // format that initially has no rekap suffix
+                return "";
+            }
+            else {
+                return "." + this.selectedRekapLevel().toLowerCase();
+            }
+        }, this);
+
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
 
@@ -73,7 +109,7 @@ class Pilpres2014 {
         this.totalVotes = ko.observable("");
         this.voteEntries = ko.observableArray([]);
         this.provinceVoteEntries = ko.observableArray([]);
-        
+        this.totalVoteEntries = ko.observableArray([]);
         this.baseFeedUrl = "https://github.com/ht4n/Pilpres2014Portal/blob/master/KPU-Feeds-";
         this.historicalFeeds = ko.observableArray([]);
         this.selectedDataFeed = ko.observable(null);
@@ -101,35 +137,11 @@ class Pilpres2014 {
         
         this.toggleHistoricalText = ko.observable("Expand");
         this.toggleProvinceText = ko.observable("Expand");
-    }
+    } 
 
     updateVoteByDate(data: { datetime: string; url: string; }, event: Event) {
         var vm = ko.contextFor(event.currentTarget);
         vm.$root.refreshMainTicker(data.datetime);
-    }
-
-    selectRecap(value: string) {
-        if (value === "DA1") {
-            this.selectedRekapLevel("DA1");
-            this.suffix = "-total.json";
-            this.provinceSuffix = "-province.json";
-        }
-        else if (value === "DB1") {
-            this.selectedRekapLevel("DB1");
-            this.suffix = "-total.db1.json";
-            this.provinceSuffix = "-province.db1.json";
-        }
-        else if (value == "DC1") {
-            this.selectedRekapLevel("DC1");
-            this.suffix = "-total.dc1.json";
-            this.provinceSuffix = "-province.dc1.json";
-        }
-        else {
-            console.error("Invalid rekap level value " + value);
-            return;
-        }
-
-        this.refreshMainTicker(this.lastUpdatedTime());
     }
 
     toggleHistoricalData() {
@@ -210,12 +222,13 @@ class Pilpres2014 {
 
     refreshProvinceDetails() {
         var self = this;
+
         var provinceCallback = function (data, status) {
             console.log("response:" + status);
             if (status !== "success") {
                 return;
             }
-
+                       
             var dataJson = JSON.parse(data);
             self.provinceVoteEntries.removeAll();
             dataJson.forEach((entry) => {
@@ -268,7 +281,7 @@ class Pilpres2014 {
     refreshMainTicker(datetime: string) {
         var self = this;
         self.voteEntries.removeAll();
-        
+
         var totalCallback = function (data, status) {
             console.log("response:" + status);
             if (status !== "success") {
@@ -276,6 +289,8 @@ class Pilpres2014 {
             }
 
             var dataJson = JSON.parse(data);
+            var context = this;
+            var idx = this.id;
         
             for (var i = 0; i < dataJson.length; ++i) {
                 var entry: {
@@ -286,19 +301,25 @@ class Pilpres2014 {
                     Total: string
                 } = dataJson[i];
 
-                var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
-                voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win" : "");
+                voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win " : "bigScore");
                 voteEntry.percentageVotes1(parseFloat(entry.PrabowoHattaPercentage).toFixed(2) + "%");
 
                 voteEntry.totalVotes2(parseInt(entry.JokowiKallaVotes).toLocaleString());
-                voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "win" : "");
+                voteEntry.status2(parseFloat(entry.JokowiKallaPercentage) > 50.0 ? "bigScore win" : "bigScore");
                 voteEntry.percentageVotes2(parseFloat(entry.JokowiKallaPercentage).toFixed(2) + "%");
 
                 voteEntry.total(entry.Total);
-                voteEntry.label(context);
+                switch (idx) {
+                    case 0: voteEntry.label("DA1: "); break;
+                    case 1: voteEntry.label("DB1: "); break;
+                    case 2: voteEntry.label("DC1: "); break;
+                }
 
+                self.totalVoteEntries()[idx] = voteEntry;
+                self.totalVoteEntries.notifySubscribers();
+        
                 self.percentageVotes1(voteEntry.percentageVotes1());
                 self.percentageVotes2(voteEntry.percentageVotes2());
                 self.totalVotes1(voteEntry.totalVotes1());
@@ -309,8 +330,14 @@ class Pilpres2014 {
                 break;
             };
         }
+        var suffix;
 
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + this.suffix, this.lastUpdatedTime(), totalCallback);
+        suffix = "-total.dc1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 2}, totalCallback);
+        suffix = "-total.db1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 1}, totalCallback);
+        suffix = "-total.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 0}, totalCallback);
     }
 
     query(url, context?, callback?, statusCallback?) {

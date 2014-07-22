@@ -14,32 +14,28 @@
 <body>
     <div id="fb-root"></div>
     <script>
-    (function (d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s); js.id = id;
-        js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&appId=851956344818547&version=v2.0";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&appId=851956344818547&version=v2.0";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
     </script>
 
     <div class="pageTitle">Pilpres 2014 - Real Count</div>
-    <hr/>    
+    <hr />
     <div>
-        <a href="AboutUs.html"><span class="sectionLink">About us</span></a>        
+        <a href="AboutUs.html"><span class="sectionLink">About us</span></a>
         |
         <a href="Images/pilpres2014_architecture.png"><span class="sectionLink">Architecture</span></a>
-            (
-            <a href="Images/pilpres2014_architecture.png"><span class="sectionLink">png</span></a>
-            |
-            <a href="Resources/pilpres2014_architecture.pdf"><span class="sectionLink">pdf</span></a>
-            )
+        (
+        <a href="Images/pilpres2014_architecture.png"><span class="sectionLink">png</span></a>
+        |
+        <a href="Resources/pilpres2014_architecture.pdf"><span class="sectionLink">pdf</span></a>
+        )
     </div>
-    <hr/>
-    <span class="largeSectionLink">REKAP:</span>
-    <a href="#" data-bind="click:function(d, e) { selectRecap('DA1', d, e) }"><span class="largeSectionLink">DA1</span></a>
-    <a href="#" data-bind="click:function(d, e) { selectRecap('DB1', d, e) }"><span class="largeSectionLink">DB1</span></a>
-    <a href="#" data-bind="click:function(d, e) { selectRecap('DC1', d, e) }"><span class="largeSectionLink">DC1</span></a>
+    <hr />
     <table class="scoreTable">
         <thead>
             <tr>
@@ -48,6 +44,7 @@
             </tr>
         </thead>
         <tbody>
+            <!-- ko with: totalVoteEntries()[2] -->
             <tr>
                 <td>
                     <span data-bind="text:percentageVotes1,attr:{class:status1()}"></span>
@@ -57,8 +54,47 @@
                 </td>
             </tr>
             <tr>
-                <td><span data-bind="text:totalVotes1"></span></td>
-                <td><span data-bind="text:totalVotes2"></span></td>
+                <td><span data-bind="text:label"></span><span data-bind="text:totalVotes1"></span></td>
+                <td><span data-bind="text:label"></span><span data-bind="text:totalVotes2"></span></td>
+            </tr>
+            <!-- /ko -->
+            <tr>
+                <td>
+                    <table class="alternativeDataTable">
+                        <tr>
+                            <!-- ko with: totalVoteEntries()[0] -->
+                            <td><span class="caption" data-bind="text:label"></span></td>
+                            <td><span class="caption" data-bind="text:percentageVotes1"></span></td>
+                            <td><span class="caption" data-bind="text:totalVotes1"></span></td>
+                            <!-- /ko -->
+                        </tr>
+                        <tr>
+                            <!-- ko with: totalVoteEntries()[1] -->
+                            <td><span class="caption" data-bind="text:label"></span></td>
+                            <td><span class="caption" data-bind="text:percentageVotes1"></span></td>
+                            <td><span class="caption" data-bind="text:totalVotes1"></span></td>
+                            <!-- /ko -->
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <table class="alternativeDataTable">
+                        <tr>
+                            <!-- ko with: totalVoteEntries()[0] -->
+                            <td><span class="caption" data-bind="text:label"></span></td>
+                            <td><span class="caption" data-bind="text:percentageVotes2"></span></td>
+                            <td><span class="caption" data-bind="text:totalVotes2"></span></td>
+                            <!-- /ko -->
+                        </tr>
+                        <tr>
+                            <!-- ko with: totalVoteEntries()[1] -->
+                            <td><span class="caption" data-bind="text:label"></span></td>
+                            <td><span class="caption" data-bind="text:percentageVotes2"></span></td>
+                            <td><span class="caption" data-bind="text:totalVotes2"></span></td>
+                            <!-- /ko -->
+                        </tr>
+                    </table>
+                </td>
             </tr>
             <tr>
                 <td colspan="2">
@@ -68,8 +104,8 @@
             </tr>
         </tbody>
     </table>
-    <div style="text-align:right"><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>    
-    <hr />    
+    <div style="text-align:right"><span class="caption">Last Updated: </span><span class="caption" data-bind="text:lastUpdatedTime"></span><span class="caption"> PST</span></div>
+    <hr />
     <!-- FB-like and Twitter tweets -->
     <table align="center">
         <tr>
@@ -86,9 +122,9 @@
             </td>
         </tr>
     </table>
-    <hr />
     <div class="section">Last 72 Hours:</div>
     <a href="#" data-bind="click:toggleHistoricalData,text:toggleHistoricalText"></a>
+    <select data-bind="options:rekapLevels,value:selectedRekapLevel"></select>
     <hr />
     <!-- ko if:showHistoricalData -->
     <table class="scoreTable">
@@ -107,8 +143,8 @@
         </tbody>
     </table>
     <!-- /ko -->
-    <hr/>
-    <div class="section">Data Visualization:</div>    
+    <hr />
+    <div class="section">Data Visualization:</div>
     <a class="caption" href="bubleviz.html">Dynamic Pack</a>
     |
     <a class="caption" href="packhierarchy.html">Blue Pack</a>
@@ -118,14 +154,15 @@
     <a class="caption" href="vizindex.html">Difference</a>
     |
     <a class="caption" href="barhierarchy.html">iHBar</a>
-    |    
+    |
     <a class="caption" href="midbarhierarchy.html">MidLevel iHBar (Kabupaten)</a>
     |
     <a class="caption" href="deepbarhierarchy.html">Deep iHBar (Warning:2MBytes)</a>
-    <hr/>
+    <hr />
     <div class="section">Provincial Votes:</div>
     <a href="#" data-bind="click:toggleProvinceDetails,text:toggleProvinceText"></a>
     <a href="#" data-bind="click:refreshProvinceDetails">Refresh</a>
+    <select data-bind="options:rekapLevels,value:selectedRekapLevel"></select>
     <hr />
     <!-- ko if:showProvinceDetails -->
     <span class="caption">(Click table header to sort)</span>
@@ -133,11 +170,11 @@
         <thead>
             <tr class="tableHeader">
                 <th>Province</th>
-				<th onclick="pilpres2014ViewModel.sortProvinceData(1);" >Prabowo-Hatta<br />(%)</th>
-				<th onclick="pilpres2014ViewModel.sortProvinceData(2);">Jokowi-Kalla<br />(%)</th>
-				<th onclick="pilpres2014ViewModel.sortProvinceData(3);">Prabowo-Hatta<br />(votes)</th>
-				<th onclick="pilpres2014ViewModel.sortProvinceData(4);">Jokowi-Kalla <br />(votes)</th>
-				<th onclick="pilpres2014ViewModel.sortProvinceData(5);">Total votes</th>
+                <th onclick="pilpres2014ViewModel.sortProvinceData(1);">Prabowo-Hatta<br />(%)</th>
+                <th onclick="pilpres2014ViewModel.sortProvinceData(2);">Jokowi-Kalla<br />(%)</th>
+                <th onclick="pilpres2014ViewModel.sortProvinceData(3);">Prabowo-Hatta<br />(votes)</th>
+                <th onclick="pilpres2014ViewModel.sortProvinceData(4);">Jokowi-Kalla <br />(votes)</th>
+                <th onclick="pilpres2014ViewModel.sortProvinceData(5);">Total votes</th>
             </tr>
         </thead>
         <tbody>
@@ -146,25 +183,26 @@
                 <td><span data-bind="text:label"></span></td>
                 <td><span data-bind="text:percentageVotes1,css:{win:percentageVotes1() > 50.0,lose:percentageVotes1() < 50.0}"></span></td>
                 <td><span data-bind="text:percentageVotes2,css:{win:percentageVotes2() > 50.0,lose:percentageVotes2() < 50.0}"></span></td>
-				<td><span data-bind="text:totalVotes1,css:{win:percentageVotes1() > 50.0,lose:percentageVotes1() < 50.0}"></span></td>
-				<td><span data-bind="text:totalVotes2,css:{win:percentageVotes2() > 50.0,lose:percentageVotes2() < 50.0}"></span></td>
-				<td><span data-bind="text:total"></span></td>
+                <td><span data-bind="text:totalVotes1,css:{win:percentageVotes1() > 50.0,lose:percentageVotes1() < 50.0}"></span></td>
+                <td><span data-bind="text:totalVotes2,css:{win:percentageVotes2() > 50.0,lose:percentageVotes2() < 50.0}"></span></td>
+                <td><span data-bind="text:total"></span></td>
             </tr>
             <!-- /ko -->
         </tbody>
     </table>
     <!-- /ko -->
-    <hr/>
+    <hr />
     <div class="section">Downloads Historical Data:</div>
     <select data-bind="options:historicalFeeds, optionsText: function(item) { return item.datetime }, value:selectedDataFeed"></select>
+    <select data-bind="options:rekapLevels,value:selectedRekapLevel"></select>
     <!-- ko with:selectedDataFeed -->
-    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '.csv'}">complete</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + $root.getFileRekapPrefix() + '.csv'}">complete</a>
     |
-    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-total.json'}">national</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-total' + $root.getFileRekapPrefix() + '.json'}">national</a>
     |
-    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-province.json'}">province</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-province' + $root.getFileRekapPrefix() + '.json'}">province</a>
     |
-    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten.json'}">kabupaten</a>
+    <a data-bind="attr:{href:$root.baseFeedUrl + datetime + '-kabupaten' + $root.getFileRekapPrefix() + '.json'}">kabupaten</a>
     <!-- /ko -->
 
     <hr />
