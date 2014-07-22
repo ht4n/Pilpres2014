@@ -43,7 +43,6 @@ class Pilpres2014 {
     totalVotes: KnockoutObservable<string>;
     voteEntries: KnockoutObservableArray<VoteEntry>;
     totalVoteEntries: KnockoutObservableArray<VoteEntry>;
-    showTotalVoteEntries: KnockoutObservable<boolean>;
 
     provinceVoteEntries: KnockoutObservableArray<VoteEntry>;
     showProvinceDetails: KnockoutObservable<boolean>;
@@ -59,13 +58,12 @@ class Pilpres2014 {
     provinceSuffix: string;
 
     constructor() {
-        this.suffix = "-total.json";
-        this.provinceSuffix = "-province.json";
-        this.selectedRekapLevel = ko.observable("DA1");
+        this.suffix = "-total.dc1.json";
+        this.provinceSuffix = "-province.dc1.json";
+        this.selectedRekapLevel = ko.observable("DC1");
         
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
-        this.showTotalVoteEntries = ko.observable(false);
 
         var self = this;
         this.url = ko.observable("https://github.com/ht4n/Pilpres2014");
@@ -272,47 +270,19 @@ class Pilpres2014 {
         }
     }
 
-    toggleShowTotalVoteEntries() {
-        var self = this;
-        // if all three entries are not null, show the total vote entries
-        var showTotal = true;
-        var i = 0;
-        while (showTotal && i < 3) {
-            showTotal = self.totalVoteEntries()[i] != null;
-            i++;
-        }
-        if (showTotal) {
-            self.showTotalVoteEntries(true);
-        }
-
-    }
-
     refreshMainTicker(datetime: string) {
         var self = this;
         self.voteEntries.removeAll();
-        self.totalVoteEntries.removeAll();
-        self.showTotalVoteEntries(false);
 
-        self.totalVoteEntries([null, null, null]);
-        var da1Callback = function (data, status) {
-            totalCallback(data, status, 0);
-            self.toggleShowTotalVoteEntries(); 
-        }
-        var db1Callback = function (data, status) {
-            totalCallback (data, status, 1);
-        }
-        var dc1Callback = function (data, status) {
-            totalCallback (data, status, 2);
-        }
-
-        var totalCallback = function (data, status, idx) {
+        var totalCallback = function (data, status) {
             console.log("response:" + status);
             if (status !== "success") {
-                self.totalVoteEntries()[idx] = new VoteEntry();
                 return;
             }
 
             var dataJson = JSON.parse(data);
+            var context = this;
+            var idx = this.id;
         
             for (var i = 0; i < dataJson.length; ++i) {
                 var entry: {
@@ -323,7 +293,6 @@ class Pilpres2014 {
                     Total: string
                 } = dataJson[i];
 
-                var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                 voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win " : "bigScore");
@@ -341,10 +310,8 @@ class Pilpres2014 {
                 }
 
                 self.totalVoteEntries()[idx] = voteEntry;
-                self.toggleShowTotalVoteEntries(); 
-        
                 self.totalVoteEntries.notifySubscribers();
-
+        
                 self.percentageVotes1(voteEntry.percentageVotes1());
                 self.percentageVotes2(voteEntry.percentageVotes2());
                 self.totalVotes1(voteEntry.totalVotes1());
@@ -357,12 +324,12 @@ class Pilpres2014 {
         }
         var suffix;
 
-        suffix = "-total.db1.json";
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), db1Callback);
-        suffix = "-total.json";
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), da1Callback);
         suffix = "-total.dc1.json";
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), dc1Callback);
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 2}, totalCallback);
+        suffix = "-total.db1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 1}, totalCallback);
+        suffix = "-total.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 0}, totalCallback);
     }
 
     query(url, context?, callback?, statusCallback?) {

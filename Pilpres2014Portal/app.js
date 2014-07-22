@@ -20,13 +20,12 @@ var VoteEntry = (function () {
 var Pilpres2014 = (function () {
     function Pilpres2014() {
         var _this = this;
-        this.suffix = "-total.json";
-        this.provinceSuffix = "-province.json";
-        this.selectedRekapLevel = ko.observable("DA1");
+        this.suffix = "-total.dc1.json";
+        this.provinceSuffix = "-province.dc1.json";
+        this.selectedRekapLevel = ko.observable("DC1");
 
         this.showProvinceDetails = ko.observable(false);
         this.showHistoricalData = ko.observable(false);
-        this.showTotalVoteEntries = ko.observable(false);
 
         var self = this;
         this.url = ko.observable("https://github.com/ht4n/Pilpres2014");
@@ -226,52 +225,23 @@ var Pilpres2014 = (function () {
         }
     };
 
-    Pilpres2014.prototype.toggleShowTotalVoteEntries = function () {
-        var self = this;
-
-        // if all three entries are not null, show the total vote entries
-        var showTotal = true;
-        var i = 0;
-        while (showTotal && i < 3) {
-            showTotal = self.totalVoteEntries()[i] != null;
-            i++;
-        }
-        if (showTotal) {
-            self.showTotalVoteEntries(true);
-        }
-    };
-
     Pilpres2014.prototype.refreshMainTicker = function (datetime) {
         var self = this;
         self.voteEntries.removeAll();
-        self.totalVoteEntries.removeAll();
-        self.showTotalVoteEntries(false);
 
-        self.totalVoteEntries([null, null, null]);
-        var da1Callback = function (data, status) {
-            totalCallback(data, status, 0);
-            self.toggleShowTotalVoteEntries();
-        };
-        var db1Callback = function (data, status) {
-            totalCallback(data, status, 1);
-        };
-        var dc1Callback = function (data, status) {
-            totalCallback(data, status, 2);
-        };
-
-        var totalCallback = function (data, status, idx) {
+        var totalCallback = function (data, status) {
             console.log("response:" + status);
             if (status !== "success") {
-                self.totalVoteEntries()[idx] = new VoteEntry();
                 return;
             }
 
             var dataJson = JSON.parse(data);
+            var context = this;
+            var idx = this.id;
 
             for (var i = 0; i < dataJson.length; ++i) {
                 var entry = dataJson[i];
 
-                var context = this;
                 var voteEntry = new VoteEntry();
                 voteEntry.totalVotes1(parseInt(entry.PrabowoHattaVotes).toLocaleString());
                 voteEntry.status1(parseFloat(entry.PrabowoHattaPercentage) > 50.0 ? "win " : "bigScore");
@@ -295,8 +265,6 @@ var Pilpres2014 = (function () {
                 }
 
                 self.totalVoteEntries()[idx] = voteEntry;
-                self.toggleShowTotalVoteEntries();
-
                 self.totalVoteEntries.notifySubscribers();
 
                 self.percentageVotes1(voteEntry.percentageVotes1());
@@ -312,12 +280,12 @@ var Pilpres2014 = (function () {
         };
         var suffix;
 
-        suffix = "-total.db1.json";
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), db1Callback);
-        suffix = "-total.json";
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), da1Callback);
         suffix = "-total.dc1.json";
-        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, this.lastUpdatedTime(), dc1Callback);
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 2 }, totalCallback);
+        suffix = "-total.db1.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 1 }, totalCallback);
+        suffix = "-total.json";
+        this.query("KPU-Feeds-" + this.lastUpdatedTime() + suffix, { "datetime": this.lastUpdatedTime(), "id": 0 }, totalCallback);
     };
 
     Pilpres2014.prototype.query = function (url, context, callback, statusCallback) {
