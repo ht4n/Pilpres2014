@@ -22,6 +22,7 @@
     <Content Include="barhierarchy.html" />
     <Content Include="bublevisstatic.html" />
     <Content Include="bubleviz.html" />
+    <Content Include="Images\jkw.png" />
     <Content Include="Images\pilpres2014_architecture.PNG" />
     <Content Include="index.html" />
     <Content Include="Resources\pilpres2014_architecture.pdf" />
