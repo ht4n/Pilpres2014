@@ -157,7 +157,7 @@ class Pilpres2014 {
             var dataCount = 0;
 
             // Use this workaround until DB1/DC1 catching up to 36 entries
-            var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 1), this.historicalFeeds().length);
+            var maxHistoricalEntries = Math.min((this.selectedRekapLevel() === "DA1" ? 36 : 20), this.historicalFeeds().length);
 
             var historicalDataCallback = function (data, status) {
                 console.log("response:" + status);
